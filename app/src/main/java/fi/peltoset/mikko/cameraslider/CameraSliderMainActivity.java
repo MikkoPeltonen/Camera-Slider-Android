@@ -1,6 +1,5 @@
 package fi.peltoset.mikko.cameraslider;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
@@ -15,13 +14,19 @@ import android.view.MenuItem;
 public class CameraSliderMainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
+    DrawerLayout drawer;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera_slider_main);
 
+        drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -32,14 +37,15 @@ public class CameraSliderMainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        navigationView.setCheckedItem(R.id.nav_manual);
+        navigationView.setCheckedItem(R.id.nav_motorized_video);
         FragmentManager fragmentManager = getSupportFragmentManager();
-        fragmentManager.beginTransaction().replace(R.id.content_frame, new ManualModeFragment()).commit();
+        fragmentManager.beginTransaction().replace(R.id.content_frame, new MotorizedMovementFragment()).commit();
     }
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        // When back button is pressed, close the navigation drawer if it is open. Otherwise
+        // continue as normal.
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
@@ -47,6 +53,12 @@ public class CameraSliderMainActivity extends AppCompatActivity
         }
     }
 
+    /**
+     * Handle fragment changes from the navigation drawer.
+     *
+     * @param item
+     * @return
+     */
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         int id = item.getItemId();
@@ -58,9 +70,6 @@ public class CameraSliderMainActivity extends AppCompatActivity
             fragment = new MotorizedMovementFragment();
         } else if(id == R.id.nav_panorama) {
             fragment = new PanoramaFragment();
-        } else if(id == R.id.nav_settings) {
-            Intent intent = new Intent(this, SettingsActivity.class);
-            startActivity(intent);
         }
 
         if(fragment != null) {
@@ -70,6 +79,7 @@ public class CameraSliderMainActivity extends AppCompatActivity
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
+
         return true;
     }
 }
