@@ -16,42 +16,51 @@
             android:id="@+id/commonsPanel"
             android:layout_width="match_parent"
             android:layout_height="150dp"
-            android:background="#ff5722"
+            android:background="@color/colorPrimary"
             android:elevation="4dp"
             android:gravity="center_vertical|center_horizontal"
             android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/totalRunningTime"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:drawableLeft="@drawable/ic_access_time_white_36dp"
-                android:drawablePadding="10dp"
-                android:paddingBottom="0dp"
-                android:paddingLeft="10dp"
-                android:paddingRight="10dp"
-                android:paddingTop="10dp"
-                android:text="2 h 15 min"
-                android:textColor="#ffffff"
-                android:textSize="36sp" />
-
-            <TextView
-                android:id="@+id/finalVideoLength"
+            <LinearLayout
+                android:id="@+id/timeContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="20dp"
-                android:elevation="1dp"
-                android:text="15,2 s"
-                android:textAlignment="center"
-                android:textColor="#ffffff" />
+                android:layout_marginTop="10dp"
+                android:gravity="center_vertical|center_horizontal"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/totalRunningTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:drawableLeft="@drawable/ic_access_time_white_36dp"
+                    android:drawablePadding="10dp"
+                    android:paddingBottom="0dp"
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp"
+                    android:text="2 h 15 min"
+                    android:textColor="#ffffff"
+                    android:textSize="36sp" />
+
+                <TextView
+                    android:id="@+id/finalVideoLength"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="15,2 s"
+                    android:textAlignment="center"
+                    android:textColor="#ffffff" />
+            </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/timelapseRow"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="20dp"
                 android:orientation="horizontal">
 
                 <LinearLayout
+                    android:id="@+id/videoFPSContainer"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
@@ -76,6 +85,7 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    android:id="@+id/totalFramesCapturedContainer"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
@@ -123,9 +133,23 @@
         android:layout_margin="16dp"
         android:clickable="true"
         android:src="@drawable/ic_play_arrow_white_24dp"
-        app:backgroundTint="#03a9f4"
+        app:backgroundTint="@color/colorAccent"
         app:elevation="9dp"
+        app:fabSize="normal"
         app:layout_anchor="@id/commonsPanel"
         app:layout_anchorGravity="bottom|right|end" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/addKeyframe"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:clickable="true"
+        android:src="@drawable/ic_add_white_24dp"
+        app:backgroundTint="@color/colorPrimary"
+        app:elevation="9dp"
+        app:fabSize="normal"
+        app:layout_anchor="@id/keyframes"
+        app:layout_anchorGravity="bottom|right" />
 
 </android.support.design.widget.CoordinatorLayout>
