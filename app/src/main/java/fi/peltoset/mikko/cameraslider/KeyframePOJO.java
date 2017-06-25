@@ -1,20 +1,22 @@
 package fi.peltoset.mikko.cameraslider;
 
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+
 /**
  *
  */
 public class KeyframePOJO {
-  private int duration;
-  private double slideLength;
-  private double panAngle;
-  private double tiltAngle;
-  private double zoom;
-  private double focus;
+  private int duration = 0; // milliseconds
+  private int slideLength = 0; // mm
+  private int panAngle = 0; // 1/100 of a degree
+  private int tiltAngle = 0; // 1/100 of a degree
+  private int zoom = 0; // 1/100 of a degree
+  private int focus = 0; // 1/100 of a degree
 
-  public KeyframePOJO() {
-  }
+  public KeyframePOJO() {}
 
-  public KeyframePOJO(int duration, double slideLength, double panAngle, double tiltAngle, double zoom, double focus) {
+  public KeyframePOJO(int duration, int slideLength, int panAngle, int tiltAngle, int zoom, int focus) {
     this.duration = duration;
     this.slideLength = slideLength;
     this.panAngle = panAngle;
@@ -36,7 +38,7 @@ public class KeyframePOJO {
     this.duration = duration;
   }
 
-  public double getSlideLength() {
+  public int getSlideLength() {
     return this.slideLength;
   }
 
@@ -48,51 +50,62 @@ public class KeyframePOJO {
     this.slideLength = slideLength;
   }
 
-  public double getPanAngle() {
+  public int getPanAngle() {
     return this.panAngle;
   }
 
   public String getFormattedPanAngle() {
-    return Math.abs(this.panAngle) + "° " + (this.panAngle < 0 ? "CCW" : "CW");
+    return formatAngle(this.panAngle) + "°";
   }
 
-  public void setPanAngle(double panAngle) {
+  public void setPanAngle(int panAngle) {
     this.panAngle = panAngle;
   }
 
-  public double getTiltAngle() {
+  public int getTiltAngle() {
     return this.tiltAngle;
   }
 
   public String getFormattedTiltAngle() {
-    return Math.abs(this.tiltAngle) + "° " + (this.tiltAngle < 0 ? "CCW" : "CW");
+    return formatAngle(this.tiltAngle) + "°";
   }
 
-  public void setTiltAngle(double tiltAngle) {
+  public void setTiltAngle(int tiltAngle) {
     this.tiltAngle = tiltAngle;
   }
 
-  public double getZoom() {
+  public int getZoom() {
     return this.zoom;
   }
 
   public String getFormattedZoom() {
-    return Math.abs(this.zoom) + "° " + (this.zoom < 0 ? "CCW" : "CW");
+    return formatAngle(this.zoom) + "°";
   }
 
-  public void setZoom(double zoom) {
+  public void setZoom(int zoom) {
     this.zoom = zoom;
   }
 
-  public double getFocus() {
+  public int getFocus() {
     return this.focus;
   }
 
   public String getFormattedFocus() {
-    return Math.abs(this.focus) + "° " + (this.focus < 0 ? "CCW" : "CW");
+    return formatAngle(this.focus) + "°";
   }
 
-  public void setFocus(double focus) {
+  public void setFocus(int focus) {
     this.focus = focus;
+  }
+
+  /**
+   *
+   * @param angle
+   * @return
+   */
+  private String formatAngle(int angle) {
+    DecimalFormat df = new DecimalFormat("0.00");
+    df.setRoundingMode(RoundingMode.HALF_UP);
+    return df.format(angle / 100.0);
   }
 }

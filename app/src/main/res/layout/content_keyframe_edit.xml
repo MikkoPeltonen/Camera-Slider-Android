@@ -34,13 +34,13 @@
                     app:srcCompat="@drawable/ic_access_time_white_36dp" />
 
                 <TextView
-                    android:id="@+id/textView5"
+                    android:id="@+id/time"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="10dp"
-                    android:text="15.200 s"
+                    android:text="0.000 s"
                     android:textColor="#ffffff"
-                    android:textSize="36sp" />
+                    android:textSize="36sp"/>
             </LinearLayout>
 
             <TextView
@@ -73,8 +73,9 @@
                     android:id="@+id/slideLeft"
                     android:layout_width="55dp"
                     android:layout_height="55dp"
-                    app:srcCompat="@drawable/ic_arrow_left"
-                    android:background="?attr/selectableItemBackgroundBorderless"/>
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:tag="L"
+                    app:srcCompat="@drawable/ic_arrow_left"/>
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -107,8 +108,9 @@
                     android:id="@+id/slideRight"
                     android:layout_width="55dp"
                     android:layout_height="55dp"
-                    app:srcCompat="@drawable/ic_arrow_right"
-                    android:background="?attr/selectableItemBackgroundBorderless"/>
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:tag="R"
+                    app:srcCompat="@drawable/ic_arrow_right"/>
 
             </LinearLayout>
 
@@ -122,8 +124,9 @@
                     android:id="@+id/panCCW"
                     android:layout_width="55dp"
                     android:layout_height="55dp"
-                    app:srcCompat="@drawable/ic_arrow_left"
-                    android:background="?attr/selectableItemBackgroundBorderless"/>
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:tag="L"
+                    app:srcCompat="@drawable/ic_arrow_left"/>
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -147,17 +150,18 @@
                         android:layout_height="30dp"
                         android:layout_weight="1"
                         android:gravity="center_vertical|center_horizontal"
-                        android:text="12.1 ° CW"
+                        android:text="0.0 °"
                         android:textAlignment="center"
-                        android:textSize="24sp" />
+                        android:textSize="24sp"/>
                 </LinearLayout>
 
                 <ImageButton
                     android:id="@+id/panCW"
                     android:layout_width="55dp"
                     android:layout_height="55dp"
-                    app:srcCompat="@drawable/ic_arrow_right"
-                    android:background="?attr/selectableItemBackgroundBorderless"/>
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:tag="R"
+                    app:srcCompat="@drawable/ic_arrow_right"/>
 
             </LinearLayout>
 
@@ -171,8 +175,9 @@
                     android:id="@+id/tiltCCW"
                     android:layout_width="55dp"
                     android:layout_height="55dp"
-                    app:srcCompat="@drawable/ic_arrow_left"
-                    android:background="?attr/selectableItemBackgroundBorderless"/>
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:tag="L"
+                    app:srcCompat="@drawable/ic_arrow_left"/>
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -196,17 +201,18 @@
                         android:layout_height="30dp"
                         android:layout_weight="1"
                         android:gravity="center_vertical|center_horizontal"
-                        android:text="3.4 ° CCW"
+                        android:text="0.0 °"
                         android:textAlignment="center"
-                        android:textSize="24sp" />
+                        android:textSize="24sp"/>
                 </LinearLayout>
 
                 <ImageButton
                     android:id="@+id/tiltCW"
                     android:layout_width="55dp"
                     android:layout_height="55dp"
-                    app:srcCompat="@drawable/ic_arrow_right"
-                    android:background="?attr/selectableItemBackgroundBorderless"/>
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:tag="R"
+                    app:srcCompat="@drawable/ic_arrow_right"/>
 
             </LinearLayout>
 
@@ -220,8 +226,9 @@
                     android:id="@+id/zoomCCW"
                     android:layout_width="55dp"
                     android:layout_height="55dp"
-                    app:srcCompat="@drawable/ic_arrow_left"
-                    android:background="?attr/selectableItemBackgroundBorderless"/>
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:tag="L"
+                    app:srcCompat="@drawable/ic_arrow_left"/>
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -245,17 +252,18 @@
                         android:layout_height="30dp"
                         android:layout_weight="1"
                         android:gravity="center_vertical|center_horizontal"
-                        android:text="32.0 ° CW"
+                        android:text="0.0 °"
                         android:textAlignment="center"
-                        android:textSize="24sp" />
+                        android:textSize="24sp"/>
                 </LinearLayout>
 
                 <ImageButton
                     android:id="@+id/zoomCW"
                     android:layout_width="55dp"
                     android:layout_height="55dp"
-                    app:srcCompat="@drawable/ic_arrow_right"
-                    android:background="?attr/selectableItemBackgroundBorderless"/>
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:tag="R"
+                    app:srcCompat="@drawable/ic_arrow_right"/>
 
             </LinearLayout>
 
@@ -269,8 +277,9 @@
                     android:id="@+id/focusCCW"
                     android:layout_width="55dp"
                     android:layout_height="55dp"
-                    app:srcCompat="@drawable/ic_arrow_left"
-                    android:background="?attr/selectableItemBackgroundBorderless"/>
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:tag="L"
+                    app:srcCompat="@drawable/ic_arrow_left"/>
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -294,17 +303,18 @@
                         android:layout_height="30dp"
                         android:layout_weight="1"
                         android:gravity="center_vertical|center_horizontal"
-                        android:text="5.2 ° CW"
+                        android:text="0.0 °"
                         android:textAlignment="center"
-                        android:textSize="24sp" />
+                        android:textSize="24sp"/>
                 </LinearLayout>
 
                 <ImageButton
                     android:id="@+id/focusCW"
                     android:layout_width="55dp"
                     android:layout_height="55dp"
-                    app:srcCompat="@drawable/ic_arrow_right"
-                    android:background="?attr/selectableItemBackgroundBorderless"/>
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:tag="R"
+                    app:srcCompat="@drawable/ic_arrow_right"/>
 
             </LinearLayout>
 

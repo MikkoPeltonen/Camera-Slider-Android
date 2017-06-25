@@ -67,7 +67,7 @@ public class KeyframeAdapter extends RecyclerView.Adapter<KeyframeAdapter.ViewHo
         holder.keyframeDuration.setText(keyframe.getFormattedDuration());
         holder.slideLength.setText(keyframe.getFormattedSlideLength());
         holder.panAngle.setText(keyframe.getFormattedPanAngle());
-        holder.tiltAngle.setText(keyframe.getFormattedSlideLength());
+        holder.tiltAngle.setText(keyframe.getFormattedTiltAngle());
         holder.zoomAmount.setText(keyframe.getFormattedZoom());
         holder.focusAngle.setText(keyframe.getFormattedFocus());
     }

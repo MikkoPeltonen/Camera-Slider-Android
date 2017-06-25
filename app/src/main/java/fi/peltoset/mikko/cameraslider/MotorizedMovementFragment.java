@@ -9,6 +9,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -17,10 +18,21 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 
+import static android.app.Activity.RESULT_OK;
+
 public class MotorizedMovementFragment extends Fragment {
+
+  private static final int CREATE_NEW_KEYFRAME = 1;
+  private static final int EDIT_KEYFRAME = 2;
+  private static final int INTERVAL_PICKER = 3;
+
+  private int interval = 1000;
 
   private FloatingActionButton startMovement;
   private FloatingActionButton addKeyframe;
@@ -30,8 +42,8 @@ public class MotorizedMovementFragment extends Fragment {
   private TextView videoFPS;
   private TextView totalFramesCaptured;
   private LinearLayout videoFPSContainer;
-  private LinearLayout timeContainer;
-
+  private LinearLayout photoIntervalContainer;
+  private TextView photoInterval;
 
   private RecyclerView.Adapter keyframeAdapter;
   private RecyclerView.LayoutManager keyframeLayoutManager;
@@ -43,6 +55,8 @@ public class MotorizedMovementFragment extends Fragment {
   // Frame rates: 23,976; 24; 25; 29,97; 30; 50; 59,94; 60
 
   private Mode operationMode = Mode.TIMELAPSE;
+
+  private ArrayList<KeyframePOJO> keyframes = new ArrayList<>();
 
   public MotorizedMovementFragment() {
   }
@@ -74,7 +88,8 @@ public class MotorizedMovementFragment extends Fragment {
     videoFPS = (TextView) view.findViewById(R.id.videoFPS);
     totalFramesCaptured = (TextView) view.findViewById(R.id.totalFramesCaptured);
     videoFPSContainer = (LinearLayout) view.findViewById(R.id.videoFPSContainer);
-    timeContainer = (LinearLayout) view.findViewById(R.id.timeContainer);
+    photoIntervalContainer = (LinearLayout) view.findViewById(R.id.photoIntervalContainer);
+    photoInterval = (TextView) view.findViewById(R.id.photoInterval);
 
     // Handle start button click
     startMovement.setOnClickListener(new View.OnClickListener() {
@@ -112,21 +127,23 @@ public class MotorizedMovementFragment extends Fragment {
       @Override
       public void onClick(View v) {
         Intent intent = new Intent(getActivity(), KeyframeEditActivity.class);
-        startActivity(intent);
-      }
-    });
-
-    timeContainer.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-
+        startActivityForResult(intent, CREATE_NEW_KEYFRAME);
       }
     });
 
     videoFPSContainer.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
+        Toast.makeText(getContext(), "Set FPS", Toast.LENGTH_SHORT).show();
+      }
+    });
 
+    photoIntervalContainer.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        IntervalPickerDialog intervalPicker = IntervalPickerDialog.newInstance(interval);
+        intervalPicker.show(getFragmentManager(), "interval_picker_fragment");
+        intervalPicker.setTargetFragment(MotorizedMovementFragment.this, INTERVAL_PICKER);
       }
     });
 
@@ -135,22 +152,71 @@ public class MotorizedMovementFragment extends Fragment {
     keyframeLayoutManager = new LinearLayoutManager(getContext());
     keyframesRecyclerView.setLayoutManager(keyframeLayoutManager);
 
-    ArrayList<KeyframePOJO> keyframes = new ArrayList<>();
-    keyframes.add(new KeyframePOJO(3540, 52.5, 6.5, 4.3, 30.0, 7.2));
-    keyframes.add(new KeyframePOJO(1550, 30.2, 5.3, -6.3, 0.0, 11.2));
-    keyframes.add(new KeyframePOJO(2000, 0.0, -2.0, 4.1, -7.0, 5.0));
-    keyframes.add(new KeyframePOJO(3540, 52.5, 6.5, 4.3, 30.0, 7.2));
-    keyframes.add(new KeyframePOJO(1550, 30.2, 5.3, -6.3, 0.0, 11.2));
-    keyframes.add(new KeyframePOJO(2000, 0.0, -2.0, 4.1, -7.0, 5.0));
-    keyframes.add(new KeyframePOJO(3540, 52.5, 6.5, 4.3, 30.0, 7.2));
-    keyframes.add(new KeyframePOJO(1550, 30.2, 5.3, -6.3, 0.0, 11.2));
-    keyframes.add(new KeyframePOJO(2000, 0.0, -2.0, 4.1, -7.0, 5.0));
+    keyframes.add(new KeyframePOJO(5400, 525, 650, 430, 300, 720));
+    keyframes.add(new KeyframePOJO(10000, 302, 53, -63, 0, 112));
+    keyframes.add(new KeyframePOJO(6700, 0, -20, 41, -70, 50));
 
 
     keyframeAdapter = new KeyframeAdapter(keyframes);
     keyframesRecyclerView.setAdapter(keyframeAdapter);
 
+    keyframesRecyclerView.addOnItemTouchListener(
+        new RecyclerItemClickListener(getContext(), keyframesRecyclerView, new RecyclerItemClickListener.OnItemClickListener() {
+          @Override
+          public void onItemClick(View view, int position) {
+            KeyframePOJO keyframe = keyframes.get(position);
+
+            Intent intent = new Intent(getActivity(), KeyframeEditActivity.class);
+            intent.putExtra("KEYFRAME_INDEX", position);
+            intent.putExtra("KEYFRAME_DURATION", keyframe.getDuration());
+            intent.putExtra("KEYFRAME_SLIDE", keyframe.getSlideLength());
+            intent.putExtra("KEYFRAME_PAN", keyframe.getPanAngle());
+            intent.putExtra("KEYFRAME_TILT", keyframe.getTiltAngle());
+            intent.putExtra("KEYFRAME_ZOOM", keyframe.getZoom());
+            intent.putExtra("KEYFRAME_FOCUS", keyframe.getFocus());
+
+            startActivityForResult(intent, EDIT_KEYFRAME);
+
+            Log.d("cs", position + "");
+          }
+
+          @Override
+          public void onLongItemClick(View view, int position) {}
+        })
+    );
+
     return view;
+  }
+
+  @Override
+  public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    if (data == null) {
+      return;
+    }
+
+    // Handle Activity responses for creating and updating keyframes
+    if (requestCode == CREATE_NEW_KEYFRAME || requestCode == EDIT_KEYFRAME) {
+      int index = data.getIntExtra("KEYFRAME_INDEX", -1);
+      int duration = data.getIntExtra("KEYFRAME_DURATION", 0);
+      int slide = data.getIntExtra("KEYFRAME_SLIDE", 0);
+      int pan = data.getIntExtra("KEYFRAME_PAN", 0);
+      int tilt = data.getIntExtra("KEYFRAME_TILT", 0);
+      int zoom = data.getIntExtra("KEYFRAME_ZOOM", 0);
+      int focus = data.getIntExtra("KEYFRAME_FOCUS", 0);
+
+      KeyframePOJO keyframe = new KeyframePOJO(duration, slide, pan, tilt, zoom, focus);
+
+      if (requestCode == CREATE_NEW_KEYFRAME && resultCode == RESULT_OK) {
+        keyframes.add(keyframe);
+        keyframeAdapter.notifyItemInserted(keyframes.size() - 1);
+      } else if (requestCode == EDIT_KEYFRAME && resultCode == RESULT_OK && index != -1) {
+        keyframes.set(index, keyframe);
+        keyframeAdapter.notifyItemChanged(index);
+      }
+    } else if (requestCode == INTERVAL_PICKER) {
+      MotorizedMovementFragment.this.interval = data.getIntExtra("INTERVAL", 1000);
+      updateIntervalTime();
+    }
   }
 
   /**
@@ -195,5 +261,12 @@ public class MotorizedMovementFragment extends Fragment {
       default:
         return false;
     }
+  }
+
+  private void updateIntervalTime() {
+    DecimalFormat df = new DecimalFormat("0.0");
+    df.setRoundingMode(RoundingMode.HALF_UP);
+    String time = df.format(this.interval / 1000.0);
+    this.photoInterval.setText(time + " s");
   }
 }
