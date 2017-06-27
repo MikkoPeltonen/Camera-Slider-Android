@@ -39,12 +39,12 @@
                     android:textSize="24sp" />
 
                 <TextView
-                    android:id="@+id/keyframeStartsAt"
+                    android:id="@+id/keyframeVideoDuration"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="starts 17.20"
+                    android:text="15.2 s"
                     android:textAlignment="center"
-                    android:textColor="@android:color/darker_gray" />
+                    android:textColor="@android:color/darker_gray"/>
 
             </LinearLayout>
 

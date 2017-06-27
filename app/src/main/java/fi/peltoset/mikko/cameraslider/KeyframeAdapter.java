@@ -8,72 +8,90 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
-public class KeyframeAdapter extends RecyclerView.Adapter<KeyframeAdapter.ViewHolder> {
-    private ArrayList<KeyframePOJO> dataset;
+public class KeyframeAdapter extends RecyclerView.Adapter<KeyframeAdapter.ViewHolder> implements RecyclerViewFpsIntervalListener {
+  private ArrayList<KeyframePOJO> dataset;
+  private int interval = 1000;
+  private int fps = 30000;
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        TextView keyframeDuration;
-        TextView keyframeStartsAt;
-        TextView slideLength;
-        TextView panAngle;
-        TextView tiltAngle;
-        TextView zoomAmount;
-        TextView focusAngle;
+  /**
+   * Handle updating the total time in timelapse mode
+   *
+   * @param fps
+   * @param interval
+   */
+  @Override
+  public void setFpsAndInterval(int fps, int interval) {
+    this.fps = fps;
+    this.interval = interval;
+    notifyDataSetChanged();
+  }
 
-        public ViewHolder(View itemView) {
-            super(itemView);
+  public class ViewHolder extends RecyclerView.ViewHolder {
+    TextView keyframeDuration;
+    TextView finalVideoDuration;
+    TextView slideLength;
+    TextView panAngle;
+    TextView tiltAngle;
+    TextView zoomAmount;
+    TextView focusAngle;
 
-            keyframeDuration = (TextView) itemView.findViewById(R.id.keyframeDuration);
-            keyframeStartsAt = (TextView) itemView.findViewById(R.id.keyframeStartsAt);
-            slideLength = (TextView) itemView.findViewById(R.id.slideLength);
-            panAngle = (TextView) itemView.findViewById(R.id.panAngle);
-            tiltAngle = (TextView) itemView.findViewById(R.id.tiltAngle);
-            zoomAmount = (TextView) itemView.findViewById(R.id.zoomAmount);
-            focusAngle = (TextView) itemView.findViewById(R.id.focusAngle);
-        }
+    public ViewHolder(View itemView) {
+      super(itemView);
+
+      keyframeDuration = (TextView) itemView.findViewById(R.id.keyframeDuration);
+      finalVideoDuration = (TextView) itemView.findViewById(R.id.keyframeVideoDuration);
+      slideLength = (TextView) itemView.findViewById(R.id.slideLength);
+      panAngle = (TextView) itemView.findViewById(R.id.panAngle);
+      tiltAngle = (TextView) itemView.findViewById(R.id.tiltAngle);
+      zoomAmount = (TextView) itemView.findViewById(R.id.zoomAmount);
+      focusAngle = (TextView) itemView.findViewById(R.id.focusAngle);
     }
+  }
 
-    public KeyframeAdapter(ArrayList<KeyframePOJO> dataset) {
-        this.dataset = dataset;
-    }
+  public KeyframeAdapter(ArrayList<KeyframePOJO> dataset, int fps, int interval) {
+    this.dataset = dataset;
+    this.fps = fps;
+    this.interval = interval;
+  }
 
-    /**
-     * Create new view by inflating a new layout.
-     *
-     * @param parent
-     * @param viewType
-     * @return
-     */
-    @Override
-    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.keyframe_listview_item, parent, false);
+  /**
+   * Create new view by inflating a new layout.
+   *
+   * @param parent
+   * @param viewType
+   * @return
+   */
+  @Override
+  public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    View view = LayoutInflater.from(parent.getContext())
+        .inflate(R.layout.keyframe_listview_item, parent, false);
 
+    ViewHolder viewHolder = new ViewHolder(view);
 
-        ViewHolder viewHolder = new ViewHolder(view);
-        return viewHolder;
-    }
+    return viewHolder;
+  }
 
-    /**
-     * Replace contents of a view.
-     *
-     * @param holder
-     * @param position
-     */
-    @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        KeyframePOJO keyframe = dataset.get(position);
+  /**
+   * Replace contents of a view.
+   *
+   * @param holder
+   * @param position
+   */
+  @Override
+  public void onBindViewHolder(ViewHolder holder, int position) {
+    KeyframePOJO keyframe = dataset.get(position);
 
-        holder.keyframeDuration.setText(keyframe.getFormattedDuration());
-        holder.slideLength.setText(keyframe.getFormattedSlideLength());
-        holder.panAngle.setText(keyframe.getFormattedPanAngle());
-        holder.tiltAngle.setText(keyframe.getFormattedTiltAngle());
-        holder.zoomAmount.setText(keyframe.getFormattedZoom());
-        holder.focusAngle.setText(keyframe.getFormattedFocus());
-    }
+    holder.keyframeDuration.setText(keyframe.getFormattedDuration(fps, interval));
+    holder.finalVideoDuration.setText(keyframe.getFormattedVideoLength());
+    holder.slideLength.setText(keyframe.getFormattedSlideLength());
+    holder.panAngle.setText(keyframe.getFormattedPanAngle());
+    holder.tiltAngle.setText(keyframe.getFormattedTiltAngle());
+    holder.zoomAmount.setText(keyframe.getFormattedZoom());
+    holder.focusAngle.setText(keyframe.getFormattedFocus());
+  }
 
-    @Override
-    public int getItemCount() {
-        return dataset.size();
-    }
+  @Override
+  public int getItemCount() {
+    return dataset.size();
+  }
 }

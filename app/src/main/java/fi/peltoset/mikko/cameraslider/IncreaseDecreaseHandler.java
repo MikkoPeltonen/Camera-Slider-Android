@@ -3,12 +3,11 @@ package fi.peltoset.mikko.cameraslider;
 import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.ImageButton;
 
 public class IncreaseDecreaseHandler {
 
   private IncreaseDecreaseListener listener;
-  private ImageButton increaseButton, decreaseButton;
+  private View increaseButton, decreaseButton;
 
   private Handler handler = new Handler();
 
@@ -26,7 +25,7 @@ public class IncreaseDecreaseHandler {
   private static final int DELAY = 25;
 
 
-  public IncreaseDecreaseHandler(ImageButton increaseButton, ImageButton decreaseButton, IncreaseDecreaseListener listener) {
+  public IncreaseDecreaseHandler(View increaseButton, View decreaseButton, IncreaseDecreaseListener listener) {
     this.listener = listener;
     this.increaseButton = increaseButton;
     this.decreaseButton = decreaseButton;

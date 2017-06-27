@@ -39,7 +39,7 @@
                     android:paddingBottom="0dp"
                     android:paddingLeft="10dp"
                     android:paddingRight="10dp"
-                    android:text="2 h 15 min"
+                    android:text="0 min 0 s"
                     android:textColor="#ffffff"
                     android:textSize="36sp"/>
 
@@ -47,7 +47,7 @@
                     android:id="@+id/finalVideoLength"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="15,2 s"
+                    android:text="0.0 s"
                     android:textAlignment="center"
                     android:textColor="#ffffff"/>
             </LinearLayout>
@@ -105,7 +105,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:gravity="center_horizontal"
-                        android:text="24.97"
+                        android:text="30"
                         android:textColor="#ffffff"
                         android:textSize="18sp"/>
                 </LinearLayout>
@@ -130,7 +130,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:gravity="center_horizontal"
-                        android:text="338"
+                        android:text="0"
                         android:textColor="#ffffff"
                         android:textSize="18sp"/>
                 </LinearLayout>

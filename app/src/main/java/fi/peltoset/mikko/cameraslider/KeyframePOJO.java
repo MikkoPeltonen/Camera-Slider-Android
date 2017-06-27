@@ -30,8 +30,20 @@ public class KeyframePOJO {
     return this.duration;
   }
 
-  public String getFormattedDuration() {
-    return (int) (this.duration / 60) + " min " + (int) (this.duration % 60) + " s";
+  public String getFormattedDuration(int fps, int interval) {
+    double waitTime = (this.duration / 1000.0) * (fps / 1000.0) * (interval / 1000.0);
+
+    if (waitTime >= 3600) {
+      return (int) (waitTime / 3600) + " h " + (int) (waitTime % 3600 / 3600 * 60) + " min";
+    }
+
+    return (int) (waitTime / 60) + " min " + (int) (waitTime % 60) + " s";
+  }
+
+  public String getFormattedVideoLength() {
+    DecimalFormat df = new DecimalFormat("0.0");
+    df.setRoundingMode(RoundingMode.HALF_UP);
+    return df.format(duration / 1000.0) + " s";
   }
 
   public void setDuration(int duration) {

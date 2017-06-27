@@ -18,7 +18,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
@@ -28,11 +27,14 @@ import static android.app.Activity.RESULT_OK;
 
 public class MotorizedMovementFragment extends Fragment {
 
+  // Activity result codes
   private static final int CREATE_NEW_KEYFRAME = 1;
   private static final int EDIT_KEYFRAME = 2;
   private static final int INTERVAL_PICKER = 3;
+  private static final int FPS_PICKER = 4;
 
-  private int interval = 1000;
+  private int interval = 1000; // milliseconds
+  private int fps = 30000; // thousandths
 
   private FloatingActionButton startMovement;
   private FloatingActionButton addKeyframe;
@@ -40,6 +42,7 @@ public class MotorizedMovementFragment extends Fragment {
   private LinearLayout timelapseRow;
   private TextView finalVideoLength;
   private TextView videoFPS;
+  private TextView totalWaitTime;
   private TextView totalFramesCaptured;
   private LinearLayout videoFPSContainer;
   private LinearLayout photoIntervalContainer;
@@ -47,19 +50,18 @@ public class MotorizedMovementFragment extends Fragment {
 
   private RecyclerView.Adapter keyframeAdapter;
   private RecyclerView.LayoutManager keyframeLayoutManager;
+  private RecyclerViewFpsIntervalListener adapterListener;
 
   private enum Mode {
     TIMELAPSE, VIDEO
   }
 
-  // Frame rates: 23,976; 24; 25; 29,97; 30; 50; 59,94; 60
-
   private Mode operationMode = Mode.TIMELAPSE;
 
+  // All keyframes in the motion
   private ArrayList<KeyframePOJO> keyframes = new ArrayList<>();
 
-  public MotorizedMovementFragment() {
-  }
+  public MotorizedMovementFragment() {}
 
   public static MotorizedMovementFragment newInstance() {
     MotorizedMovementFragment fragment = new MotorizedMovementFragment();
@@ -90,6 +92,7 @@ public class MotorizedMovementFragment extends Fragment {
     videoFPSContainer = (LinearLayout) view.findViewById(R.id.videoFPSContainer);
     photoIntervalContainer = (LinearLayout) view.findViewById(R.id.photoIntervalContainer);
     photoInterval = (TextView) view.findViewById(R.id.photoInterval);
+    totalWaitTime = (TextView) view.findViewById(R.id.totalRunningTime);
 
     // Handle start button click
     startMovement.setOnClickListener(new View.OnClickListener() {
@@ -119,29 +122,48 @@ public class MotorizedMovementFragment extends Fragment {
 
           }
         });
+
         builder.create().show();
       }
     });
 
+    // Start a new Activity for adding a new keyframe
     addKeyframe.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
         Intent intent = new Intent(getActivity(), KeyframeEditActivity.class);
+        intent.putExtra("FPS", fps);
+        intent.putExtra("INTERVAL", interval);
         startActivityForResult(intent, CREATE_NEW_KEYFRAME);
       }
     });
 
+    // Open a dialog for choosing the video FPS
     videoFPSContainer.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
-        Toast.makeText(getContext(), "Set FPS", Toast.LENGTH_SHORT).show();
+        FPSPickerDialog fpsPicker = FPSPickerDialog.newInstance();
+        fpsPicker.setFPS(fps);
+        fpsPicker.show(getFragmentManager(), "fps_picker_dialog");
+        fpsPicker.setTargetFragment(MotorizedMovementFragment.this, FPS_PICKER);
       }
     });
 
+    // Open a dialog for choosing the interval photos are taken
     photoIntervalContainer.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
-        IntervalPickerDialog intervalPicker = IntervalPickerDialog.newInstance(interval);
+        ValuePickerDialog intervalPicker = ValuePickerDialog.newInstance();
+        intervalPicker
+            .setValue(interval)
+            .setStepSize(100)
+            .setTitle("Interval")
+            .setMessage("Select how often the camera should take a picture.")
+            .setIcon(R.drawable.ic_av_timer_white_36dp)
+            .setDivider(1000)
+            .setUnit("s")
+            .setMinimumValue(100);
+
         intervalPicker.show(getFragmentManager(), "interval_picker_fragment");
         intervalPicker.setTargetFragment(MotorizedMovementFragment.this, INTERVAL_PICKER);
       }
@@ -152,14 +174,19 @@ public class MotorizedMovementFragment extends Fragment {
     keyframeLayoutManager = new LinearLayoutManager(getContext());
     keyframesRecyclerView.setLayoutManager(keyframeLayoutManager);
 
+    // Sample keyframes, to be removed
     keyframes.add(new KeyframePOJO(5400, 525, 650, 430, 300, 720));
     keyframes.add(new KeyframePOJO(10000, 302, 53, -63, 0, 112));
     keyframes.add(new KeyframePOJO(6700, 0, -20, 41, -70, 50));
 
-
-    keyframeAdapter = new KeyframeAdapter(keyframes);
+    keyframeAdapter = new KeyframeAdapter(keyframes, fps, interval);
     keyframesRecyclerView.setAdapter(keyframeAdapter);
 
+    // RecyclerViewFpsIntervalListener allows to update FPS/interval changes to the items in the
+    // RecyclerView so that the times are correctly displayed
+    adapterListener = (RecyclerViewFpsIntervalListener) keyframeAdapter;
+
+    // Handle opening an edit dialog for keyframes when they are clicked in the RecyclerView list
     keyframesRecyclerView.addOnItemTouchListener(
         new RecyclerItemClickListener(getContext(), keyframesRecyclerView, new RecyclerItemClickListener.OnItemClickListener() {
           @Override
@@ -167,6 +194,8 @@ public class MotorizedMovementFragment extends Fragment {
             KeyframePOJO keyframe = keyframes.get(position);
 
             Intent intent = new Intent(getActivity(), KeyframeEditActivity.class);
+            intent.putExtra("FPS", fps);
+            intent.putExtra("INTERVAL", interval);
             intent.putExtra("KEYFRAME_INDEX", position);
             intent.putExtra("KEYFRAME_DURATION", keyframe.getDuration());
             intent.putExtra("KEYFRAME_SLIDE", keyframe.getSlideLength());
@@ -176,8 +205,6 @@ public class MotorizedMovementFragment extends Fragment {
             intent.putExtra("KEYFRAME_FOCUS", keyframe.getFocus());
 
             startActivityForResult(intent, EDIT_KEYFRAME);
-
-            Log.d("cs", position + "");
           }
 
           @Override
@@ -185,7 +212,49 @@ public class MotorizedMovementFragment extends Fragment {
         })
     );
 
+    // THIS SHOULD NOT BE HERE AFTER REMOVING INITIAL KEYFRAMES
+    updateTotalTimeAndFrames();
+    updateIntervalTime();
+
     return view;
+  }
+
+  /**
+   * When FPS or interval changes, update the total time it is going to take for the timelapse to
+   * finish and show the picture count that needs to be taken.
+   */
+  private void updateTotalTimeAndFrames() {
+    // Calculate total duration, in milliseconds
+    int totalTime = 0;
+    for (KeyframePOJO keyframePOJO : keyframes) {
+      totalTime += keyframePOJO.getDuration();
+    }
+
+    DecimalFormat df = new DecimalFormat("0.0");
+    df.setRoundingMode(RoundingMode.HALF_UP);
+
+    // Final video length
+    finalVideoLength.setText(df.format(totalTime / 1000.0) + " s");
+
+    // Total number of frames
+    totalFramesCaptured.setText(Integer.toString((int) (totalTime / 1000.0 * fps / 1000.0)));
+
+    // Time it takes to take all the frames, given the interval
+    totalTime = (int) (totalTime / 1000.0 * fps / 1000.0 * interval / 1000.0);
+
+    // Display type, depending on the length. Either hours and minutes or minutes and seconds for
+    // shorter periods.
+    String timeDisplay;
+    if (totalTime >= 3600) {
+      timeDisplay = (totalTime / 3600) + " h " + (int) (totalTime % 3600 / 3600.0 * 60) + " min";
+    } else {
+      timeDisplay = (totalTime / 60) + " min " + (totalTime % 60) + " s";
+    }
+
+    totalWaitTime.setText(timeDisplay);
+
+    // Update adapter so that each item gets the right timing info
+    adapterListener.setFpsAndInterval(fps, interval);
   }
 
   @Override
@@ -206,6 +275,7 @@ public class MotorizedMovementFragment extends Fragment {
 
       KeyframePOJO keyframe = new KeyframePOJO(duration, slide, pan, tilt, zoom, focus);
 
+      // Add or update existing
       if (requestCode == CREATE_NEW_KEYFRAME && resultCode == RESULT_OK) {
         keyframes.add(keyframe);
         keyframeAdapter.notifyItemInserted(keyframes.size() - 1);
@@ -213,9 +283,18 @@ public class MotorizedMovementFragment extends Fragment {
         keyframes.set(index, keyframe);
         keyframeAdapter.notifyItemChanged(index);
       }
+
+      updateTotalTimeAndFrames();
     } else if (requestCode == INTERVAL_PICKER) {
+      // Handle interval dialog result
       MotorizedMovementFragment.this.interval = data.getIntExtra("INTERVAL", 1000);
       updateIntervalTime();
+      updateTotalTimeAndFrames();
+    } else if (requestCode == FPS_PICKER) {
+      // Handle FPS dialog result
+      fps = data.getIntExtra("FPS", 30000);
+      updateFPS();
+      updateTotalTimeAndFrames();
     }
   }
 
@@ -263,10 +342,22 @@ public class MotorizedMovementFragment extends Fragment {
     }
   }
 
+  /**
+   * Update the interval display
+   */
   private void updateIntervalTime() {
     DecimalFormat df = new DecimalFormat("0.0");
     df.setRoundingMode(RoundingMode.HALF_UP);
     String time = df.format(this.interval / 1000.0);
     this.photoInterval.setText(time + " s");
+  }
+
+  /**
+   * Update the FPS display
+   */
+  private void updateFPS() {
+    DecimalFormat df = new DecimalFormat("0.###");
+    df.setRoundingMode(RoundingMode.HALF_UP);
+    this.videoFPS.setText(df.format(this.fps / 1000.0));
   }
 }

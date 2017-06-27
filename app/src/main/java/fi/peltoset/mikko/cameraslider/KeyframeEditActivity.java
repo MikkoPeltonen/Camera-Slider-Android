@@ -14,10 +14,11 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 
 public class KeyframeEditActivity extends AppCompatActivity {
+
+  private static final int TIME_PICKER = 1;
 
   private LinearLayout timePanel;
   private FloatingActionButton saveButton;
@@ -37,6 +38,10 @@ public class KeyframeEditActivity extends AppCompatActivity {
   private TextView zoomTextView;
   private TextView focusTextView;
   private TextView time;
+  private TextView waitTime;
+
+  private int fps;
+  private int interval;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +57,9 @@ public class KeyframeEditActivity extends AppCompatActivity {
     keyframe.setTiltAngle(intent.getIntExtra("KEYFRAME_TILT", 0));
     keyframe.setZoom(intent.getIntExtra("KEYFRAME_ZOOM", 0));
     keyframe.setFocus(intent.getIntExtra("KEYFRAME_FOCUS", 0));
+
+    fps = intent.getIntExtra("FPS", 1);
+    interval = intent.getIntExtra("INTERVAL", 1);
 
     Toolbar toolbar = (Toolbar) findViewById(R.id.keyframeToolbar);
     setSupportActionBar(toolbar);
@@ -77,12 +85,24 @@ public class KeyframeEditActivity extends AppCompatActivity {
     zoomTextView = (TextView) findViewById(R.id.zoom);
     focusTextView = (TextView) findViewById(R.id.focus);
     time = (TextView) findViewById(R.id.time);
+    waitTime = (TextView) findViewById(R.id.waitTime);
 
     // Open a time selection panel that allows setting the duration of the movement
     timePanel.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
-        Toast.makeText(KeyframeEditActivity.this, "Heheheh", Toast.LENGTH_SHORT).show();
+        ValuePickerDialog timePicker = ValuePickerDialog.newInstance();
+        timePicker
+            .setValue(keyframe.getDuration())
+            .setStepSize(100)
+            .setTitle("DURATION")
+            .setMessage("Select how long the final timelapse video should last.")
+            .setIcon(R.drawable.ic_access_time_white_36dp)
+            .setDivider(1000)
+            .setUnit("s")
+            .setMinimumValue(100);
+
+        timePicker.show(getSupportFragmentManager(), "time_picker_dialog");
       }
     });
 
@@ -166,6 +186,13 @@ public class KeyframeEditActivity extends AppCompatActivity {
     updateTextViews();
   }
 
+  @Override
+  protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    if (data == null) {
+      return;
+    }
+  }
+
   private void finishAndSave() {
     Intent result = new Intent();
 
@@ -232,7 +259,8 @@ public class KeyframeEditActivity extends AppCompatActivity {
    * Update UI
    */
   private void updateTextViews() {
-    this.time.setText(this.keyframe.getFormattedDuration());
+    this.time.setText(this.keyframe.getFormattedVideoLength());
+    this.waitTime.setText(this.keyframe.getFormattedDuration(fps, interval));
     this.slideLengthTextView.setText(this.keyframe.getFormattedSlideLength());
     this.panAngleTextView.setText(this.keyframe.getFormattedPanAngle());
     this.tiltAngleTextView.setText(this.keyframe.getFormattedTiltAngle());

@@ -44,12 +44,12 @@
             </LinearLayout>
 
             <TextView
-                android:id="@+id/textView6"
+                android:id="@+id/waitTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="40dp"
                 android:text="1 h 45 min"
-                android:textColor="#ffffff" />
+                android:textColor="#ffffff"/>
         </LinearLayout>
 
         <LinearLayout
