@@ -9,7 +9,6 @@ import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -25,7 +24,7 @@ import java.util.ArrayList;
 
 import static android.app.Activity.RESULT_OK;
 
-public class MotorizedMovementFragment extends Fragment {
+public class MotorizedMovementFragment extends Fragment implements ValuePickerDialogInterface {
 
   // Activity result codes
   private static final int CREATE_NEW_KEYFRAME = 1;
@@ -105,7 +104,8 @@ public class MotorizedMovementFragment extends Fragment {
         builder.setPositiveButton("Run", new DialogInterface.OnClickListener() {
           @Override
           public void onClick(DialogInterface dialog, int which) {
-
+            Intent recordingRunningActivity = new Intent(getActivity(), RecordingRunningActivity.class);
+            startActivity(recordingRunningActivity);
           }
         });
 
@@ -153,7 +153,7 @@ public class MotorizedMovementFragment extends Fragment {
     photoIntervalContainer.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
-        ValuePickerDialog intervalPicker = ValuePickerDialog.newInstance();
+        ValuePickerDialog intervalPicker = ValuePickerDialog.newInstance(INTERVAL_PICKER);
         intervalPicker
             .setValue(interval)
             .setStepSize(100)
@@ -163,6 +163,8 @@ public class MotorizedMovementFragment extends Fragment {
             .setDivider(1000)
             .setUnit("s")
             .setMinimumValue(100);
+
+        intervalPicker.setListener(MotorizedMovementFragment.this);
 
         intervalPicker.show(getFragmentManager(), "interval_picker_fragment");
         intervalPicker.setTargetFragment(MotorizedMovementFragment.this, INTERVAL_PICKER);
@@ -176,8 +178,8 @@ public class MotorizedMovementFragment extends Fragment {
 
     // Sample keyframes, to be removed
     keyframes.add(new KeyframePOJO(5400, 525, 650, 430, 300, 720));
-    keyframes.add(new KeyframePOJO(10000, 302, 53, -63, 0, 112));
-    keyframes.add(new KeyframePOJO(6700, 0, -20, 41, -70, 50));
+    keyframes.add(new KeyframePOJO(10000, 302, 50, -70, 0, 110));
+    keyframes.add(new KeyframePOJO(6700, 0, -20, 40, -70, 50));
 
     keyframeAdapter = new KeyframeAdapter(keyframes, fps, interval);
     keyframesRecyclerView.setAdapter(keyframeAdapter);
@@ -280,20 +282,29 @@ public class MotorizedMovementFragment extends Fragment {
         keyframes.add(keyframe);
         keyframeAdapter.notifyItemInserted(keyframes.size() - 1);
       } else if (requestCode == EDIT_KEYFRAME && resultCode == RESULT_OK && index != -1) {
-        keyframes.set(index, keyframe);
-        keyframeAdapter.notifyItemChanged(index);
+        if (data.getBooleanExtra("DELETE", false)) {
+          keyframes.remove(index);
+          keyframeAdapter.notifyItemRemoved(index);
+        } else {
+          keyframes.set(index, keyframe);
+          keyframeAdapter.notifyItemChanged(index);
+        }
       }
 
-      updateTotalTimeAndFrames();
-    } else if (requestCode == INTERVAL_PICKER) {
-      // Handle interval dialog result
-      MotorizedMovementFragment.this.interval = data.getIntExtra("INTERVAL", 1000);
-      updateIntervalTime();
       updateTotalTimeAndFrames();
     } else if (requestCode == FPS_PICKER) {
       // Handle FPS dialog result
       fps = data.getIntExtra("FPS", 30000);
       updateFPS();
+      updateTotalTimeAndFrames();
+    }
+  }
+
+  @Override
+  public void onValuePickerValueReceived(int requestCode, int value) {
+    if (requestCode == INTERVAL_PICKER) {
+      this.interval = value;
+      updateIntervalTime();
       updateTotalTimeAndFrames();
     }
   }

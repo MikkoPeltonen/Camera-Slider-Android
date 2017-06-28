@@ -43,7 +43,7 @@ public class KeyframePOJO {
   public String getFormattedVideoLength() {
     DecimalFormat df = new DecimalFormat("0.0");
     df.setRoundingMode(RoundingMode.HALF_UP);
-    return df.format(duration / 1000.0) + " s";
+    return df.format(duration / 1000.0) + " s";0
   }
 
   public void setDuration(int duration) {
@@ -67,7 +67,7 @@ public class KeyframePOJO {
   }
 
   public String getFormattedPanAngle() {
-    return formatAngle(this.panAngle) + "°";
+    return formatAngle(this.panAngle) + " °";
   }
 
   public void setPanAngle(int panAngle) {
@@ -79,7 +79,7 @@ public class KeyframePOJO {
   }
 
   public String getFormattedTiltAngle() {
-    return formatAngle(this.tiltAngle) + "°";
+    return formatAngle(this.tiltAngle) + " °";
   }
 
   public void setTiltAngle(int tiltAngle) {
@@ -91,7 +91,7 @@ public class KeyframePOJO {
   }
 
   public String getFormattedZoom() {
-    return formatAngle(this.zoom) + "°";
+    return formatAngle(this.zoom) + " °";
   }
 
   public void setZoom(int zoom) {
@@ -103,7 +103,7 @@ public class KeyframePOJO {
   }
 
   public String getFormattedFocus() {
-    return formatAngle(this.focus) + "°";
+    return formatAngle(this.focus) + " °";
   }
 
   public void setFocus(int focus) {

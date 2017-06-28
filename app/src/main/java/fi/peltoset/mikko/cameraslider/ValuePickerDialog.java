@@ -1,6 +1,5 @@
 package fi.peltoset.mikko.cameraslider;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
@@ -15,9 +14,9 @@ import android.widget.TextView;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 
-import static android.app.Activity.RESULT_OK;
-
 public class ValuePickerDialog extends DialogFragment {
+
+  private int requestCode;
 
   private Button saveButton;
   private Button cancelButton;
@@ -38,17 +37,30 @@ public class ValuePickerDialog extends DialogFragment {
   private String message = "";
   private int icon = 0;
 
+  private ValuePickerDialogInterface listener;
+
   public ValuePickerDialog() {}
 
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+
+    Bundle data = getArguments();
+    this.requestCode = data.getInt("REQUEST_CODE", -1);
   }
 
-  public static ValuePickerDialog newInstance() {
+  public static ValuePickerDialog newInstance(int requestCode) {
     ValuePickerDialog dialog = new ValuePickerDialog();
 
+    Bundle data = new Bundle();
+    data.putInt("REQUEST_CODE", requestCode);
+    dialog.setArguments(data);
+
     return dialog;
+  }
+
+  public void setListener(ValuePickerDialogInterface listener) {
+    this.listener = listener;
   }
 
   public ValuePickerDialog setTitle(String title) {
@@ -133,9 +145,7 @@ public class ValuePickerDialog extends DialogFragment {
     saveButton.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
-        Intent response = new Intent();
-        response.putExtra("INTERVAL", value);
-        getTargetFragment().onActivityResult(getTargetRequestCode(), RESULT_OK, response);
+        listener.onValuePickerValueReceived(requestCode, value);
 
         dismiss();
       }

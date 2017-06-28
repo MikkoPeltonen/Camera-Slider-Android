@@ -16,7 +16,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 
-public class KeyframeEditActivity extends AppCompatActivity {
+public class KeyframeEditActivity extends AppCompatActivity implements ValuePickerDialogInterface {
 
   private static final int TIME_PICKER = 1;
 
@@ -51,7 +51,7 @@ public class KeyframeEditActivity extends AppCompatActivity {
     Intent intent = getIntent();
 
     keyframeIndex = intent.getIntExtra("KEYFRAME_INDEX", -1);
-    keyframe.setDuration(intent.getIntExtra("KEYFRAME_DURATION", 0));
+    keyframe.setDuration(intent.getIntExtra("KEYFRAME_DURATION", 3000));
     keyframe.setSlideLength(intent.getIntExtra("KEYFRAME_SLIDE", 0));
     keyframe.setPanAngle(intent.getIntExtra("KEYFRAME_PAN", 0));
     keyframe.setTiltAngle(intent.getIntExtra("KEYFRAME_TILT", 0));
@@ -91,7 +91,7 @@ public class KeyframeEditActivity extends AppCompatActivity {
     timePanel.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
-        ValuePickerDialog timePicker = ValuePickerDialog.newInstance();
+        ValuePickerDialog timePicker = ValuePickerDialog.newInstance(TIME_PICKER);
         timePicker
             .setValue(keyframe.getDuration())
             .setStepSize(100)
@@ -101,6 +101,8 @@ public class KeyframeEditActivity extends AppCompatActivity {
             .setDivider(1000)
             .setUnit("s")
             .setMinimumValue(100);
+
+        timePicker.setListener(KeyframeEditActivity.this);
 
         timePicker.show(getSupportFragmentManager(), "time_picker_dialog");
       }
@@ -187,9 +189,10 @@ public class KeyframeEditActivity extends AppCompatActivity {
   }
 
   @Override
-  protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-    if (data == null) {
-      return;
+  public void onValuePickerValueReceived(int requestCode, int value) {
+    if (requestCode == TIME_PICKER) {
+      this.keyframe.setDuration(value);
+      updateTextViews();
     }
   }
 
@@ -228,6 +231,10 @@ public class KeyframeEditActivity extends AppCompatActivity {
   @Override
   public boolean onOptionsItemSelected(MenuItem item) {
     if (item.getItemId() == R.id.deleteKeyframe) {
+      if (keyframeIndex == -1) {
+        finish();
+      }
+
       AlertDialog.Builder builder = new AlertDialog.Builder(this);
       builder.setTitle("Are you sure?");
       builder.setMessage("This action cannot be reversed. Please be sure before you delete.");
@@ -235,7 +242,11 @@ public class KeyframeEditActivity extends AppCompatActivity {
       builder.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
         @Override
         public void onClick(DialogInterface dialog, int which) {
-
+          Intent result = new Intent();
+          result.putExtra("KEYFRAME_INDEX", keyframeIndex);
+          result.putExtra("DELETE", true);
+          setResult(RESULT_OK, result);
+          finish();
         }
       });
 
