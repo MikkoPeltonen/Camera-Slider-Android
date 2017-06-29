@@ -43,7 +43,7 @@ public class KeyframePOJO {
   public String getFormattedVideoLength() {
     DecimalFormat df = new DecimalFormat("0.0");
     df.setRoundingMode(RoundingMode.HALF_UP);
-    return df.format(duration / 1000.0) + " s";0
+    return df.format(duration / 1000.0) + " s";
   }
 
   public void setDuration(int duration) {

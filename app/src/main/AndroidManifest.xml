@@ -26,10 +26,15 @@
             android:theme="@style/AppTheme.NoActionBar"/>
         <activity
             android:name=".RecordingRunningActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:configChanges="orientation|keyboardHidden|screenSize|screenLayout"
             android:label="@string/title_activity_recording_running"
             android:theme="@style/FullscreenTheme">
         </activity>
+
+        <service
+            android:name=".ArduinoBluetoothService"
+            android:exported="false">
+        </service>
     </application>
 
 </manifest>

@@ -4,6 +4,7 @@ package fi.peltoset.mikko.cameraslider;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
@@ -72,6 +73,14 @@ public class MotorizedMovementFragment extends Fragment implements ValuePickerDi
     super.onCreate(savedInstanceState);
 
     setHasOptionsMenu(true);
+  }
+
+  @Override
+  public void onSaveInstanceState(Bundle outState) {
+    outState.putInt("INTERVAL", interval);
+    outState.putInt("FPS", fps);
+
+    super.onSaveInstanceState(outState);
   }
 
   @Override
@@ -217,6 +226,15 @@ public class MotorizedMovementFragment extends Fragment implements ValuePickerDi
     // THIS SHOULD NOT BE HERE AFTER REMOVING INITIAL KEYFRAMES
     updateTotalTimeAndFrames();
     updateIntervalTime();
+
+    if (savedInstanceState != null) {
+//      interval = savedInstanceState.getInt("INTERVAL");
+//      fps = savedInstanceState.getInt("FPS");
+//
+//      updateIntervalTime();
+//      updateTotalTimeAndFrames();
+//      updateFPS();
+    }
 
     return view;
   }
