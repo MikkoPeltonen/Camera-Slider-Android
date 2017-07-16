@@ -333,6 +333,6 @@
         app:elevation="9dp"
         app:fabSize="normal"
         app:layout_anchor="@id/timePanel"
-        app:layout_anchorGravity="bottom|right|end" />
+        app:layout_anchorGravity="bottom|right|end"/>
 
 </android.support.design.widget.CoordinatorLayout>

@@ -1,12 +1,289 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="fi.peltoset.mikko.cameraslider.PanoramaFragment">
+    tools:context="fi.peltoset.mikko.cameraslider.PanoramaFragment"
+    android:orientation="vertical">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="Panorama fragment" />
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                  xmlns:app="http://schemas.android.com/apk/res-auto"
+                  xmlns:tools="http://schemas.android.com/tools"
+                  android:layout_width="match_parent"
+                  android:layout_height="match_parent"
+                  tools:context="fi.peltoset.mikko.cameraslider.PanoramaFragment"
+                  android:orientation="vertical">
 
-</FrameLayout>
+        <TextView
+            android:id="@+id/textView6"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:gravity="center_horizontal"
+            android:text="mode"
+            android:textAlignment="center"
+            android:textColor="@android:color/darker_gray"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/modeLinear"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:layout_marginRight="20dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                app:srcCompat="@drawable/ic_view_column_black_48dp"/>
+
+            <ImageButton
+                android:id="@+id/modeGrid"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                app:srcCompat="@drawable/ic_view_module_black_48dp"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/linearControlsContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginBottom="16dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/moveLeft"
+                    android:layout_width="55dp"
+                    android:layout_height="55dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:tag="L"
+                    app:srcCompat="@drawable/ic_arrow_left"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/textView11"
+                        android:layout_width="wrap_content"
+                        android:layout_height="15dp"
+                        android:layout_weight="1"
+                        android:text="horizontal shift"
+                        android:textColor="@android:color/darker_gray"
+                        android:textSize="12sp"/>
+
+                    <TextView
+                        android:id="@+id/horizontalShift"
+                        android:layout_width="match_parent"
+                        android:layout_height="30dp"
+                        android:layout_weight="1"
+                        android:gravity="center_vertical|center_horizontal"
+                        android:text="0.0 °"
+                        android:textAlignment="center"
+                        android:textSize="24sp"/>
+                </LinearLayout>
+
+                <ImageButton
+                    android:id="@+id/moveRight"
+                    android:layout_width="55dp"
+                    android:layout_height="55dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:tag="R"
+                    app:srcCompat="@drawable/ic_arrow_right"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/moveDown"
+                    android:layout_width="55dp"
+                    android:layout_height="55dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:tag="L"
+                    app:srcCompat="@drawable/ic_arrow_left"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/textView12"
+                        android:layout_width="wrap_content"
+                        android:layout_height="15dp"
+                        android:layout_weight="1"
+                        android:text="vertical shift"
+                        android:textColor="@android:color/darker_gray"
+                        android:textSize="12sp"/>
+
+                    <TextView
+                        android:id="@+id/verticalShift"
+                        android:layout_width="match_parent"
+                        android:layout_height="30dp"
+                        android:layout_weight="1"
+                        android:gravity="center_vertical|center_horizontal"
+                        android:text="0.0 °"
+                        android:textAlignment="center"
+                        android:textSize="24sp"/>
+                </LinearLayout>
+
+                <ImageButton
+                    android:id="@+id/moveUp"
+                    android:layout_width="55dp"
+                    android:layout_height="55dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:tag="R"
+                    app:srcCompat="@drawable/ic_arrow_right"/>
+
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginBottom="16dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/decreaseOverlap"
+                    android:layout_width="55dp"
+                    android:layout_height="55dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:tag="L"
+                    app:srcCompat="@drawable/ic_arrow_left"/>
+
+                <LinearLayout
+                    android:id="@+id/overlapPercentageContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/textView12"
+                        android:layout_width="wrap_content"
+                        android:layout_height="15dp"
+                        android:layout_weight="1"
+                        android:text="overlap percentage"
+                        android:textColor="@android:color/darker_gray"
+                        android:textSize="12sp"/>
+
+                    <TextView
+                        android:id="@+id/overlapPercentage"
+                        android:layout_width="match_parent"
+                        android:layout_height="30dp"
+                        android:layout_weight="1"
+                        android:gravity="center_vertical|center_horizontal"
+                        android:text="30 %"
+                        android:textAlignment="center"
+                        android:textSize="24sp"/>
+                </LinearLayout>
+
+                <ImageButton
+                    android:id="@+id/increaseOverlap"
+                    android:layout_width="55dp"
+                    android:layout_height="55dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:tag="R"
+                    app:srcCompat="@drawable/ic_arrow_right"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/decreaseFocalLength"
+                    android:layout_width="55dp"
+                    android:layout_height="55dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:tag="L"
+                    app:srcCompat="@drawable/ic_arrow_left"/>
+
+                <LinearLayout
+                    android:id="@+id/focalLengthContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/textView12"
+                        android:layout_width="wrap_content"
+                        android:layout_height="15dp"
+                        android:layout_weight="1"
+                        android:text="focal length"
+                        android:textColor="@android:color/darker_gray"
+                        android:textSize="12sp"/>
+
+                    <TextView
+                        android:id="@+id/focalLength"
+                        android:layout_width="match_parent"
+                        android:layout_height="30dp"
+                        android:layout_weight="1"
+                        android:gravity="center_vertical|center_horizontal"
+                        android:text="200 mm"
+                        android:textAlignment="center"
+                        android:textSize="24sp"/>
+                </LinearLayout>
+
+                <ImageButton
+                    android:id="@+id/increaseFocalLength"
+                    android:layout_width="55dp"
+                    android:layout_height="55dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:tag="R"
+                    app:srcCompat="@drawable/ic_arrow_right"/>
+
+            </LinearLayout>
+        </LinearLayout>
+
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/floatingActionButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:clickable="true"
+            android:src="@drawable/ic_save_white_24dp"
+            app:backgroundTint="@color/colorAccent"
+            app:elevation="9dp"
+            app:fabSize="normal"
+            app:layout_anchor="@id/timePanel"
+            app:layout_anchorGravity="bottom|right|end"/>
+    </LinearLayout>
+
+</android.support.design.widget.CoordinatorLayout>
