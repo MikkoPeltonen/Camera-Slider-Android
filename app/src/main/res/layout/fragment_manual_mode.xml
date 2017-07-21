@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="fi.peltoset.mikko.cameraslider.ManualModeFragment">
+    tools:context="fi.peltoset.mikko.cameraslider.fragments.ManualModeFragment">
 
     <TextView
         android:id="@+id/textView2"

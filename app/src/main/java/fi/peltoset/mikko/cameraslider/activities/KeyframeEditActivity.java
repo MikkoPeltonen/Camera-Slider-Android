@@ -1,4 +1,4 @@
-package fi.peltoset.mikko.cameraslider;
+package fi.peltoset.mikko.cameraslider.activities;
 
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -14,6 +14,13 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import fi.peltoset.mikko.cameraslider.IncreaseDecreaseHandler;
+import fi.peltoset.mikko.cameraslider.miscellaneous.KeyframePOJO;
+import fi.peltoset.mikko.cameraslider.R;
+import fi.peltoset.mikko.cameraslider.dialogs.ValuePickerDialog;
+import fi.peltoset.mikko.cameraslider.interfaces.IncreaseDecreaseListener;
+import fi.peltoset.mikko.cameraslider.interfaces.ValuePickerDialogInterface;
 
 
 public class KeyframeEditActivity extends AppCompatActivity implements ValuePickerDialogInterface {

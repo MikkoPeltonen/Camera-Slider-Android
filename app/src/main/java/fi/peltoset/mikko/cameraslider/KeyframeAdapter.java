@@ -8,6 +8,9 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
+import fi.peltoset.mikko.cameraslider.interfaces.RecyclerViewFpsIntervalListener;
+import fi.peltoset.mikko.cameraslider.miscellaneous.KeyframePOJO;
+
 public class KeyframeAdapter extends RecyclerView.Adapter<KeyframeAdapter.ViewHolder> implements RecyclerViewFpsIntervalListener {
   private ArrayList<KeyframePOJO> dataset;
   private int interval = 1000;

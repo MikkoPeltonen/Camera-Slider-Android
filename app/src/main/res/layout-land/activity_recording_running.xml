@@ -7,7 +7,7 @@
               android:background="@color/colorPrimary"
               android:gravity="center_vertical|center_horizontal"
               android:padding="16dp"
-              tools:context="fi.peltoset.mikko.cameraslider.RecordingRunningActivity">
+              tools:context="fi.peltoset.mikko.cameraslider.activities.RecordingRunningActivity">
 
     <RelativeLayout
         android:layout_width="250dp"

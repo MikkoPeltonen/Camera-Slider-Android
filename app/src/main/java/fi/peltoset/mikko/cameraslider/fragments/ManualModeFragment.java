@@ -1,10 +1,12 @@
-package fi.peltoset.mikko.cameraslider;
+package fi.peltoset.mikko.cameraslider.fragments;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import fi.peltoset.mikko.cameraslider.R;
 
 
 public class ManualModeFragment extends Fragment {

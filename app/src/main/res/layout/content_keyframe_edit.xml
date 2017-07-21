@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:layout_marginTop="?android:attr/actionBarSize"
     android:orientation="vertical"
-    tools:context="fi.peltoset.mikko.cameraslider.KeyframeEditActivity">
+    tools:context="fi.peltoset.mikko.cameraslider.activities.KeyframeEditActivity">
 
     <LinearLayout
         android:layout_width="match_parent"

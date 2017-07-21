@@ -1,4 +1,4 @@
-package fi.peltoset.mikko.cameraslider;
+package fi.peltoset.mikko.cameraslider.miscellaneous;
 
 import java.math.RoundingMode;
 import java.text.DecimalFormat;

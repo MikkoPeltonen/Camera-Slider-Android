@@ -1,4 +1,4 @@
-package fi.peltoset.mikko.cameraslider;
+package fi.peltoset.mikko.cameraslider.dialogs;
 
 import android.content.Context;
 import android.content.Intent;
@@ -15,6 +15,8 @@ import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.RadioButton;
+
+import fi.peltoset.mikko.cameraslider.R;
 
 import static android.app.Activity.RESULT_OK;
 

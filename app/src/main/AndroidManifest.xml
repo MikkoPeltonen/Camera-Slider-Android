@@ -4,14 +4,20 @@
 
     <uses-permission android:name="android.permission.BLUETOOTH"/>
 
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+
+
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/ic_launcher_camera"
         android:label="@string/app_name"
         android:supportsRtl="false"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        android:name=".CameraSliderApplication">
         <activity
-            android:name=".CameraSliderMainActivity"
+            android:name=".activities.CameraSliderMainActivity"
             android:label="@string/title_activity_camera_slider_main"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
@@ -21,20 +27,21 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".KeyframeEditActivity"
+            android:name=".activities.KeyframeEditActivity"
             android:label="@string/title_activity_keyframe_edit"
             android:theme="@style/AppTheme.NoActionBar"/>
         <activity
-            android:name=".RecordingRunningActivity"
+            android:name=".activities.RecordingRunningActivity"
             android:configChanges="orientation|keyboardHidden|screenSize|screenLayout"
             android:label="@string/title_activity_recording_running"
             android:theme="@style/FullscreenTheme">
         </activity>
 
         <service
-            android:name=".ArduinoBluetoothService"
+            android:name=".bluetooth.BluetoothService"
             android:exported="false">
         </service>
+
     </application>
 
 </manifest>

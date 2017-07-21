@@ -1,4 +1,4 @@
-package fi.peltoset.mikko.cameraslider;
+package fi.peltoset.mikko.cameraslider.fragments;
 
 
 import android.os.Bundle;
@@ -10,6 +10,9 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import fi.peltoset.mikko.cameraslider.IncreaseDecreaseHandler;
+import fi.peltoset.mikko.cameraslider.R;
+import fi.peltoset.mikko.cameraslider.interfaces.IncreaseDecreaseListener;
 import fi.peltoset.mikko.cameraslider.miscellaneous.Helpers;
 
 public class PanoramaFragment extends Fragment {

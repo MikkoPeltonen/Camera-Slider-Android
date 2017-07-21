@@ -1,10 +1,9 @@
-package fi.peltoset.mikko.cameraslider;
+package fi.peltoset.mikko.cameraslider.fragments;
 
 
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
@@ -22,6 +21,17 @@ import android.widget.TextView;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+
+import fi.peltoset.mikko.cameraslider.dialogs.FPSPickerDialog;
+import fi.peltoset.mikko.cameraslider.KeyframeAdapter;
+import fi.peltoset.mikko.cameraslider.miscellaneous.KeyframePOJO;
+import fi.peltoset.mikko.cameraslider.R;
+import fi.peltoset.mikko.cameraslider.RecyclerItemClickListener;
+import fi.peltoset.mikko.cameraslider.dialogs.ValuePickerDialog;
+import fi.peltoset.mikko.cameraslider.activities.KeyframeEditActivity;
+import fi.peltoset.mikko.cameraslider.activities.RecordingRunningActivity;
+import fi.peltoset.mikko.cameraslider.interfaces.RecyclerViewFpsIntervalListener;
+import fi.peltoset.mikko.cameraslider.interfaces.ValuePickerDialogInterface;
 
 import static android.app.Activity.RESULT_OK;
 

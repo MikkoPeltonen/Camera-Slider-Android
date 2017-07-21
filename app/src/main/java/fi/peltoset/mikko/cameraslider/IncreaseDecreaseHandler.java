@@ -4,6 +4,8 @@ import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
 
+import fi.peltoset.mikko.cameraslider.interfaces.IncreaseDecreaseListener;
+
 public class IncreaseDecreaseHandler {
 
   private IncreaseDecreaseListener listener;

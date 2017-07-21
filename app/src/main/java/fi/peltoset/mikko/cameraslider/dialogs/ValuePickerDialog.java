@@ -1,4 +1,4 @@
-package fi.peltoset.mikko.cameraslider;
+package fi.peltoset.mikko.cameraslider.dialogs;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -13,6 +13,11 @@ import android.widget.TextView;
 
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
+
+import fi.peltoset.mikko.cameraslider.IncreaseDecreaseHandler;
+import fi.peltoset.mikko.cameraslider.R;
+import fi.peltoset.mikko.cameraslider.interfaces.IncreaseDecreaseListener;
+import fi.peltoset.mikko.cameraslider.interfaces.ValuePickerDialogInterface;
 
 public class ValuePickerDialog extends DialogFragment {
 

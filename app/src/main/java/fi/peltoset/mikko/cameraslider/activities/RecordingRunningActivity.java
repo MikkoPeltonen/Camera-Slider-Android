@@ -1,10 +1,12 @@
-package fi.peltoset.mikko.cameraslider;
+package fi.peltoset.mikko.cameraslider.activities;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+
+import fi.peltoset.mikko.cameraslider.R;
 
 public class RecordingRunningActivity extends AppCompatActivity {
 

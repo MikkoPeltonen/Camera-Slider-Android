@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context="fi.peltoset.mikko.cameraslider.CameraSliderMainActivity"
+    tools:context="fi.peltoset.mikko.cameraslider.activities.CameraSliderMainActivity"
     tools:showIn="@layout/app_bar_camera_slider_main">
 
     <FrameLayout
