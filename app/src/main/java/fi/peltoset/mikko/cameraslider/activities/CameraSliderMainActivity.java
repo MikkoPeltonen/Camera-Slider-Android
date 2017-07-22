@@ -37,11 +37,14 @@ import fi.peltoset.mikko.cameraslider.R;
 import fi.peltoset.mikko.cameraslider.fragments.SettingsFragment;
 import fi.peltoset.mikko.cameraslider.interfaces.BluetoothDeviceSelectionListener;
 import fi.peltoset.mikko.cameraslider.interfaces.BluetoothServiceListener;
+import fi.peltoset.mikko.cameraslider.interfaces.NotificationCommunicatorListener;
+import fi.peltoset.mikko.cameraslider.notifications.NotificationCommunicator;
 
 public class CameraSliderMainActivity extends AppCompatActivity
-    implements NavigationView.OnNavigationItemSelectedListener, BluetoothDeviceSelectionListener {
+    implements NavigationView.OnNavigationItemSelectedListener, BluetoothDeviceSelectionListener, NotificationCommunicatorListener {
 
   private BluetoothServiceCommunicator bluetoothServiceCommunicator = null;
+  private NotificationCommunicator notificationCommunicator = null;
 
   private DrawerLayout drawer;
 
@@ -77,6 +80,9 @@ public class CameraSliderMainActivity extends AppCompatActivity
     navigationView.setCheckedItem(R.id.nav_motorized_video);
     FragmentManager fragmentManager = getSupportFragmentManager();
     fragmentManager.beginTransaction().replace(R.id.content_frame, new MotorizedMovementFragment()).commit();
+
+    notificationCommunicator = new NotificationCommunicator(this);
+    notificationCommunicator.displaySampleNotification();
   }
 
   @Override
@@ -107,6 +113,12 @@ public class CameraSliderMainActivity extends AppCompatActivity
         hideConnectionProgressDialog();
       }
     });
+  }
+
+  @Override
+  protected void onStop() {
+    super.onStop();
+    notificationCommunicator.onStop();
   }
 
   @Override
@@ -170,5 +182,14 @@ public class CameraSliderMainActivity extends AppCompatActivity
 
   private void hideConnectionProgressDialog() {
     progressDialog.hide();
+  }
+
+  @Override
+  public void onNotificationStartPauseButtonPressed() {
+  }
+
+  @Override
+  public void onNotificationStopButtonPressed() {
+
   }
 }

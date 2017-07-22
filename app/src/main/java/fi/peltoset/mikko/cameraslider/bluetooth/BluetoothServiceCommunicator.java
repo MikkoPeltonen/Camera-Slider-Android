@@ -29,7 +29,7 @@ public class BluetoothServiceCommunicator {
     this.context = context;
     this.listener = listener;
 
-    bind();
+    startService();
   }
 
   /**
@@ -57,8 +57,12 @@ public class BluetoothServiceCommunicator {
   /**
    * Bind the BluetoothServiceCommunicator to the service responsible for Bluetooth actions
    */
-  private void bind() {
-    context.bindService(new Intent(context, BluetoothService.class), serviceConnection, Context.BIND_AUTO_CREATE);
+  private void startService() {
+    // startService decouples the service from the Activity's lifecycle. This ensures the service
+    // is kept running even when the Activity is destroyed. The service is stopped only when
+    // stopService is called.
+    context.startService(new Intent(context, BluetoothService.class));
+//    context.bindService(new Intent(context, BluetoothService.class), serviceConnection, Context.BIND_AUTO_CREATE);
 
     // Register a LocalBroadcastManager to receive messages from the background service
     IntentFilter intentFilter = new IntentFilter();
@@ -71,11 +75,12 @@ public class BluetoothServiceCommunicator {
   /**
    * Unbind the service
    */
-  private void unbind() {
-    if (isBluetoothServiceBound) {
-      context.unbindService(serviceConnection);
-      isBluetoothServiceBound = false;
-    }
+  private void stopService() {
+    context.stopService(new Intent(context, BluetoothService.class));
+//    if (isBluetoothServiceBound) {
+//      context.unbindService(serviceConnection);
+//      isBluetoothServiceBound = false;
+//    }
   }
 
   private void sendString(String message) {
