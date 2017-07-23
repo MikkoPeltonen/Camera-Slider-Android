@@ -14,11 +14,14 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
 
+import fi.peltoset.mikko.cameraslider.interfaces.NotificationCommunicatorListener;
 import fi.peltoset.mikko.cameraslider.miscellaneous.Constants;
+import fi.peltoset.mikko.cameraslider.notifications.NotificationCommunicator;
 
 public class BluetoothService extends Service {
   public static final int MESSAGE_STRING = 1;
   public static final int MESSAGE_CONNECT_TO_DEVICE = 2;
+  public static final int MESSAGE_STOP = 3;
 
   // Broadcast intent codes
   public static final String INTENT_DEVICE_CONNECTED = "INTENT_DEVICE_CONNECTED";
@@ -31,6 +34,7 @@ public class BluetoothService extends Service {
   private LocalBroadcastManager localBroadcastManager;
   private BluetoothAdapter bluetoothAdapter;
   private BluetoothSocket bluetoothSocket;
+  private NotificationCommunicator notificationCommunicator;
 
   // Handle incoming messages from BluetoothServiceCommunicator
   private class IncomingHandler extends Handler {
@@ -43,6 +47,9 @@ public class BluetoothService extends Service {
         case MESSAGE_CONNECT_TO_DEVICE:
           connectToDevice(msg.getData().getString(EXTRA_DEVICE_ADDRESS));
           break;
+        case MESSAGE_STOP:
+          stopAndCancelNotification();
+          break;
         default:
           super.handleMessage(msg);
       }
@@ -51,6 +58,28 @@ public class BluetoothService extends Service {
 
   private final Messenger messenger = new Messenger(new IncomingHandler());
 
+  // Called when the service is started with startService
+  @Override
+  public int onStartCommand(Intent intent, int flags, int startId) {
+    notificationCommunicator = new NotificationCommunicator(this, new NotificationCommunicatorListener() {
+      @Override
+      public void onNotificationStartPauseButtonPressed() {
+        Log.d(Constants.TAG, "pauseplay");
+      }
+
+      @Override
+      public void onNotificationStopButtonPressed() {
+        Log.d(Constants.TAG, "stop");
+      }
+    });
+
+    notificationCommunicator.displaySampleNotification();
+
+    return super.onStartCommand(intent, flags, startId);
+  }
+
+  // Called when an Activity calls bindService. Returns the Messenger used to send data back to
+  // the service.
   @Nullable
   @Override
   public IBinder onBind(Intent intent) {
@@ -80,6 +109,14 @@ public class BluetoothService extends Service {
     });
 
     connectThread.start();
+  }
+
+  /**
+   * Cancel all notifications and stop the background service
+   */
+  private void stopAndCancelNotification() {
+    notificationCommunicator.cancel();
+    stopSelf();
   }
 
   private void onConnect() {

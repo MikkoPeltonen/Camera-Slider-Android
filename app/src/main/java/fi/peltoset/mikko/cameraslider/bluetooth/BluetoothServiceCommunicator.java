@@ -1,6 +1,7 @@
 package fi.peltoset.mikko.cameraslider.bluetooth;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -20,10 +21,11 @@ import fi.peltoset.mikko.cameraslider.interfaces.BluetoothServiceListener;
 public class BluetoothServiceCommunicator {
   private BluetoothServiceListener listener;
   private Messenger serviceMessenger = null;
-  private boolean isBluetoothServiceBound = false;
 
   private Activity context;
   private BluetoothDevice bluetoothDevice;
+
+  private boolean isServiceBound = false;
 
   public BluetoothServiceCommunicator(Activity context, BluetoothServiceListener listener) {
     this.context = context;
@@ -55,14 +57,24 @@ public class BluetoothServiceCommunicator {
   }
 
   /**
-   * Bind the BluetoothServiceCommunicator to the service responsible for Bluetooth actions
+   * Start the Bluetooth service
    */
   private void startService() {
     // startService decouples the service from the Activity's lifecycle. This ensures the service
     // is kept running even when the Activity is destroyed. The service is stopped only when
     // stopService is called.
     context.startService(new Intent(context, BluetoothService.class));
-//    context.bindService(new Intent(context, BluetoothService.class), serviceConnection, Context.BIND_AUTO_CREATE);
+  }
+
+  /**
+   * Bind to a running service
+   */
+  public void bindService() {
+    if (!isServiceRunning(BluetoothService.class)) {
+      startService();
+    }
+
+    isServiceBound = context.bindService(new Intent(context, BluetoothService.class), serviceConnection, Context.BIND_AUTO_CREATE);
 
     // Register a LocalBroadcastManager to receive messages from the background service
     IntentFilter intentFilter = new IntentFilter();
@@ -75,12 +87,27 @@ public class BluetoothServiceCommunicator {
   /**
    * Unbind the service
    */
-  private void stopService() {
-    context.stopService(new Intent(context, BluetoothService.class));
-//    if (isBluetoothServiceBound) {
-//      context.unbindService(serviceConnection);
-//      isBluetoothServiceBound = false;
-//    }
+  public void unbindService() {
+    if (isServiceBound) {
+      context.unbindService(serviceConnection);
+    }
+
+    LocalBroadcastManager.getInstance(context).unregisterReceiver(bluetoothServiceBroadcastReceiver);
+  }
+
+  /**
+   * Stop service
+   */
+  public void stopService() {
+    Message msg = Message.obtain(null, BluetoothService.MESSAGE_STOP, 0, 0);
+
+    try {
+      serviceMessenger.send(msg);
+    } catch (RemoteException e) {
+      e.printStackTrace();
+    }
+
+//    context.stopService(new Intent(context, BluetoothService.class));
   }
 
   private void sendString(String message) {
@@ -103,15 +130,30 @@ public class BluetoothServiceCommunicator {
     @Override
     public void onServiceConnected(ComponentName name, IBinder service) {
       serviceMessenger = new Messenger(service);
-      isBluetoothServiceBound = true;
     }
 
     @Override
     public void onServiceDisconnected(ComponentName name) {
       serviceMessenger = null;
-      isBluetoothServiceBound = false;
     }
   };
+
+  /**
+   * Check whether a service is already running or not
+   *
+   * @param serviceClass
+   * @return
+   */
+  private boolean isServiceRunning(Class<?> serviceClass) {
+    ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+    for (ActivityManager.RunningServiceInfo service : activityManager.getRunningServices(Integer.MAX_VALUE)) {
+      if (serviceClass.getName().equals(service.service.getClassName())) {
+        return true;
+      }
+    }
+
+    return false;
+  }
 
   // Handle messages received from the Bluetooth service
   private BroadcastReceiver bluetoothServiceBroadcastReceiver = new BroadcastReceiver() {

@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.graphics.Camera;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Message;
@@ -23,6 +24,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Toast;
 
@@ -38,13 +40,15 @@ import fi.peltoset.mikko.cameraslider.fragments.SettingsFragment;
 import fi.peltoset.mikko.cameraslider.interfaces.BluetoothDeviceSelectionListener;
 import fi.peltoset.mikko.cameraslider.interfaces.BluetoothServiceListener;
 import fi.peltoset.mikko.cameraslider.interfaces.NotificationCommunicatorListener;
+import fi.peltoset.mikko.cameraslider.miscellaneous.Constants;
 import fi.peltoset.mikko.cameraslider.notifications.NotificationCommunicator;
 
 public class CameraSliderMainActivity extends AppCompatActivity
-    implements NavigationView.OnNavigationItemSelectedListener, BluetoothDeviceSelectionListener, NotificationCommunicatorListener {
+    implements NavigationView.OnNavigationItemSelectedListener, BluetoothDeviceSelectionListener {
+
+  private CameraSliderApplication app;
 
   private BluetoothServiceCommunicator bluetoothServiceCommunicator = null;
-  private NotificationCommunicator notificationCommunicator = null;
 
   private DrawerLayout drawer;
 
@@ -60,6 +64,8 @@ public class CameraSliderMainActivity extends AppCompatActivity
       Toast.makeText(this, "This device doesn't support Bluetooth", Toast.LENGTH_LONG).show();
       finish();
     }
+
+    app = (CameraSliderApplication) getApplication();
 
     drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
 
@@ -80,14 +86,6 @@ public class CameraSliderMainActivity extends AppCompatActivity
     navigationView.setCheckedItem(R.id.nav_motorized_video);
     FragmentManager fragmentManager = getSupportFragmentManager();
     fragmentManager.beginTransaction().replace(R.id.content_frame, new MotorizedMovementFragment()).commit();
-
-    notificationCommunicator = new NotificationCommunicator(this);
-    notificationCommunicator.displaySampleNotification();
-  }
-
-  @Override
-  protected void onStart() {
-    super.onStart();
 
     bluetoothServiceCommunicator = new BluetoothServiceCommunicator(this, new BluetoothServiceListener() {
       @Override
@@ -116,9 +114,26 @@ public class CameraSliderMainActivity extends AppCompatActivity
   }
 
   @Override
+  protected void onStart() {
+    super.onStart();
+
+    bluetoothServiceCommunicator.bindService();
+  }
+
+  @Override
   protected void onStop() {
     super.onStop();
-    notificationCommunicator.onStop();
+
+    if (bluetoothServiceCommunicator != null) {
+      Log.d(Constants.TAG, "unbinding");
+      bluetoothServiceCommunicator.unbindService();
+
+      if (false) {
+        // Disable Bluetooth and get rid of notification
+        Log.d(Constants.TAG, "not running, stopping");
+        bluetoothServiceCommunicator.stopService();
+      }
+    }
   }
 
   @Override
@@ -182,14 +197,5 @@ public class CameraSliderMainActivity extends AppCompatActivity
 
   private void hideConnectionProgressDialog() {
     progressDialog.hide();
-  }
-
-  @Override
-  public void onNotificationStartPauseButtonPressed() {
-  }
-
-  @Override
-  public void onNotificationStopButtonPressed() {
-
   }
 }
