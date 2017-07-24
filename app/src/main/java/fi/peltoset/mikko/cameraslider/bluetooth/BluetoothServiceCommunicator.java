@@ -2,6 +2,7 @@ package fi.peltoset.mikko.cameraslider.bluetooth;
 
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -15,8 +16,10 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
 import fi.peltoset.mikko.cameraslider.interfaces.BluetoothServiceListener;
+import fi.peltoset.mikko.cameraslider.miscellaneous.Constants;
 
 public class BluetoothServiceCommunicator {
   private BluetoothServiceListener listener;
@@ -25,27 +28,45 @@ public class BluetoothServiceCommunicator {
   private Activity context;
   private BluetoothDevice bluetoothDevice;
 
+  private BluetoothAdapter bluetoothAdapter;
+
   private boolean isServiceBound = false;
+  private boolean isDeviceConnected = false;
+  private boolean connectOnBind = false;
 
   public BluetoothServiceCommunicator(Activity context, BluetoothServiceListener listener) {
     this.context = context;
     this.listener = listener;
 
+    bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
     startService();
+  }
+
+  public boolean isServiceBound() {
+    return isServiceBound;
+  }
+
+  public boolean isDeviceConnected() {
+    return isDeviceConnected;
   }
 
   /**
    * Tell the Bluetooth service to try to connect to the given device.
    *
-   * @param device
+   * @param deviceAddress
    */
-  public void connect(BluetoothDevice device) {
-    bluetoothDevice = device;
+  public void connect(String deviceAddress) {
+    if (!BluetoothAdapter.checkBluetoothAddress(deviceAddress)) {
+      return;
+    }
+
+    bluetoothDevice = bluetoothAdapter.getRemoteDevice(deviceAddress);
 
     Message msg = Message.obtain(null, BluetoothService.MESSAGE_CONNECT_TO_DEVICE, 0, 0);
 
     Bundle data = new Bundle();
-    data.putString(BluetoothService.EXTRA_DEVICE_ADDRESS, device.getAddress());
+    data.putString(BluetoothService.EXTRA_DEVICE_ADDRESS, bluetoothDevice.getAddress());
 
     msg.setData(data);
 
@@ -63,33 +84,41 @@ public class BluetoothServiceCommunicator {
     // startService decouples the service from the Activity's lifecycle. This ensures the service
     // is kept running even when the Activity is destroyed. The service is stopped only when
     // stopService is called.
-    context.startService(new Intent(context, BluetoothService.class));
+    if (!isServiceRunning(BluetoothService.class)) {
+      context.startService(new Intent(context, BluetoothService.class));
+    }
   }
 
   /**
    * Bind to a running service
    */
   public void bindService() {
+    Log.d(Constants.TAG, "BluetoothServiceCommunicator.bindService");
     if (!isServiceRunning(BluetoothService.class)) {
+      Log.d(Constants.TAG, "service not running, why!?");
       startService();
+    } else {
+      Log.d(Constants.TAG, "service running, binding and registering BroadcastReceivers");
+      isServiceBound = context.bindService(new Intent(context, BluetoothService.class), serviceConnection, Context.BIND_AUTO_CREATE);
+
+      // Register a LocalBroadcastManager to receive messages from the background service
+      IntentFilter intentFilter = new IntentFilter();
+      intentFilter.addAction(BluetoothService.INTENT_DEVICE_CONNECTED);
+      intentFilter.addAction(BluetoothService.INTENT_DEVICE_DISCONNECTED);
+      intentFilter.addAction(BluetoothService.INTENT_DEVICE_DETECTION_FAILED);
+      LocalBroadcastManager.getInstance(context).registerReceiver(bluetoothServiceBroadcastReceiver, intentFilter);
     }
-
-    isServiceBound = context.bindService(new Intent(context, BluetoothService.class), serviceConnection, Context.BIND_AUTO_CREATE);
-
-    // Register a LocalBroadcastManager to receive messages from the background service
-    IntentFilter intentFilter = new IntentFilter();
-    intentFilter.addAction(BluetoothService.INTENT_DEVICE_CONNECTED);
-    intentFilter.addAction(BluetoothService.INTENT_DEVICE_DISCONNECTED);
-    intentFilter.addAction(BluetoothService.INTENT_DEVICE_DETECTION_FAILED);
-    LocalBroadcastManager.getInstance(context).registerReceiver(bluetoothServiceBroadcastReceiver, intentFilter);
   }
 
   /**
    * Unbind the service
    */
   public void unbindService() {
+    Log.d(Constants.TAG, "BluetoothServiceCommunicator.unbindService");
     if (isServiceBound) {
+      Log.d(Constants.TAG, "bound, unbinding");
       context.unbindService(serviceConnection);
+      isServiceBound = false;
     }
 
     LocalBroadcastManager.getInstance(context).unregisterReceiver(bluetoothServiceBroadcastReceiver);
@@ -99,6 +128,7 @@ public class BluetoothServiceCommunicator {
    * Stop service
    */
   public void stopService() {
+    Log.d(Constants.TAG, "BluetoothServiceCommunicator.stopService");
     Message msg = Message.obtain(null, BluetoothService.MESSAGE_STOP, 0, 0);
 
     try {
@@ -108,21 +138,6 @@ public class BluetoothServiceCommunicator {
     }
 
 //    context.stopService(new Intent(context, BluetoothService.class));
-  }
-
-  private void sendString(String message) {
-    Message msg = Message.obtain(null, BluetoothService.MESSAGE_STRING, 0, 0);
-
-    Bundle data = new Bundle();
-    data.putString(BluetoothService.EXTRA_STRING_MESSAGE, message);
-
-    msg.setData(data);
-
-    try {
-      serviceMessenger.send(msg);
-    } catch (RemoteException e) {
-      e.printStackTrace();
-    }
   }
 
   // Used to set up the Messenger for communicating with the Bluetooth device

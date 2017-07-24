@@ -97,6 +97,12 @@ public class CameraSliderMainActivity extends AppCompatActivity
 
         Toast.makeText(getApplicationContext(), "Camera Slider connected", Toast.LENGTH_SHORT).show();
         hideConnectionProgressDialog();
+
+        Fragment f = getSupportFragmentManager().findFragmentByTag(BluetoothDeviceSelectionFragment.class.getName());
+        if (f != null && f instanceof BluetoothDeviceSelectionFragment) {
+          BluetoothDeviceSelectionFragment bFragment = (BluetoothDeviceSelectionFragment) f;
+          bFragment.deviceConnected();
+        }
       }
 
       @Override
@@ -116,14 +122,31 @@ public class CameraSliderMainActivity extends AppCompatActivity
   @Override
   protected void onStart() {
     super.onStart();
+    Log.d(Constants.TAG, "CameraSliderMainActivity.onStart");
 
-    bluetoothServiceCommunicator.bindService();
+    // onStart is called every time the Activity is brought into view. If the BluetoothServiceCommunicator
+    // is initialized and the service is not bound then bind it now.
+    if (bluetoothServiceCommunicator != null && !bluetoothServiceCommunicator.isServiceBound()) {
+      Log.d(Constants.TAG, "service not bound, binding...");
+      bluetoothServiceCommunicator.bindService();
+    }
+
+    // If a Bluetooth device is saved in the settings and no devide is currently connected, try
+    // to connect to the saved device on startup.
+    if (app.preferences.getString(app.PREFERENCES_EXTRA_DEVICE_ADDRESS, null) != null && !bluetoothServiceCommunicator.isDeviceConnected()) {
+//      bluetoothServiceCommunicator.connect(app.preferences.getString(app.PREFERENCES_EXTRA_DEVICE_ADDRESS, null));
+    }
   }
 
   @Override
   protected void onStop() {
     super.onStop();
 
+    Log.d(Constants.TAG, "CameraSliderMainActivity.onStop");
+
+    // When the Activity is stopped (exits the view), unbind the service to prevent leaks. This would
+    // leave the service running in standalone mode in the background but after unbinding we check
+    // if there is an active task running (like timelapse or video). If not, terminate the service.
     if (bluetoothServiceCommunicator != null) {
       Log.d(Constants.TAG, "unbinding");
       bluetoothServiceCommunicator.unbindService();
@@ -172,7 +195,7 @@ public class CameraSliderMainActivity extends AppCompatActivity
 
     if (fragment != null) {
       FragmentManager fragmentManager = getSupportFragmentManager();
-      fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).commit();
+      fragmentManager.beginTransaction().replace(R.id.content_frame, fragment, fragment.getClass().getName()).commit();
     }
 
     DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -189,13 +212,18 @@ public class CameraSliderMainActivity extends AppCompatActivity
   @Override
   public void onBluetoothDeviceSelected(BluetoothDevice device) {
     progressDialog = new ProgressDialog(this, R.style.AppCompatAlertDialogStyle);
-    progressDialog.setMessage("Connecting device...");
+    progressDialog.setMessage("Connecting to device...");
     progressDialog.show();
 
-    bluetoothServiceCommunicator.connect(device);
+    bluetoothServiceCommunicator.connect(device.getAddress());
   }
 
+  /**
+   * Hide the connection dialog
+   */
   private void hideConnectionProgressDialog() {
-    progressDialog.hide();
+    if (progressDialog != null) {
+      progressDialog.hide();
+    }
   }
 }

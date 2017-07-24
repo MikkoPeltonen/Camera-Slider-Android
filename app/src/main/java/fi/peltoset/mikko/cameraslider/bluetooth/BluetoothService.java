@@ -19,16 +19,14 @@ import fi.peltoset.mikko.cameraslider.miscellaneous.Constants;
 import fi.peltoset.mikko.cameraslider.notifications.NotificationCommunicator;
 
 public class BluetoothService extends Service {
-  public static final int MESSAGE_STRING = 1;
-  public static final int MESSAGE_CONNECT_TO_DEVICE = 2;
-  public static final int MESSAGE_STOP = 3;
+  public static final int MESSAGE_CONNECT_TO_DEVICE = 1;
+  public static final int MESSAGE_STOP = 2;
 
   // Broadcast intent codes
   public static final String INTENT_DEVICE_CONNECTED = "INTENT_DEVICE_CONNECTED";
   public static final String INTENT_DEVICE_DISCONNECTED = "INTENT_DEVICE_DISCONNECTED";
   public static final String INTENT_DEVICE_DETECTION_FAILED = "INTENT_DEVICE_DETECTION_FAILED";
 
-  public static final String EXTRA_STRING_MESSAGE = "EXTRA_STRING_MESSAGE";
   public static final String EXTRA_DEVICE_ADDRESS = "EXTRA_DEVICE_ADDRESS";
 
   private LocalBroadcastManager localBroadcastManager;
@@ -41,9 +39,6 @@ public class BluetoothService extends Service {
     @Override
     public void handleMessage(Message msg) {
       switch (msg.what) {
-        case MESSAGE_STRING:
-          Toast.makeText(getApplicationContext(), msg.getData().toString(), Toast.LENGTH_SHORT).show();
-          break;
         case MESSAGE_CONNECT_TO_DEVICE:
           connectToDevice(msg.getData().getString(EXTRA_DEVICE_ADDRESS));
           break;
@@ -130,7 +125,6 @@ public class BluetoothService extends Service {
       @Override
       public void onDisconnect() {
         Log.i(Constants.TAG, "device disconnected");
-        localBroadcastManager.sendBroadcast(new Intent(INTENT_DEVICE_CONNECTED));
       }
 
       @Override
