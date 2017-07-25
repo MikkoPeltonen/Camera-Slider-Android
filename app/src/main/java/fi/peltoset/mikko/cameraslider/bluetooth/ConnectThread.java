@@ -17,6 +17,12 @@ public class ConnectThread extends Thread {
     void onConnect(BluetoothSocket socket);
   }
 
+  /**
+   * Try to connect to a Bluetooth device.
+   *
+   * @param device
+   * @param listener
+   */
   public ConnectThread(BluetoothDevice device, OnConnectListener listener) {
     this.listener = listener;
 
@@ -25,11 +31,7 @@ public class ConnectThread extends Thread {
     try {
       Method method = device.getClass().getMethod("createRfcommSocket", new Class[] { int.class });
       tmpSocket = (BluetoothSocket) method.invoke(device, 1);
-    } catch (NoSuchMethodException e) {
-      e.printStackTrace();
-    } catch (IllegalAccessException e) {
-      e.printStackTrace();
-    } catch (InvocationTargetException e) {
+    } catch (Exception e) {
       e.printStackTrace();
     }
 
@@ -37,7 +39,7 @@ public class ConnectThread extends Thread {
   }
 
   /**
-   * Connect or fail
+   * This will either connect or fail and in either case will run straight through.
    */
   public void run() {
     try {
@@ -52,6 +54,7 @@ public class ConnectThread extends Thread {
       }
     }
 
+    // Inform the listener about a succesful connection.
     listener.onConnect(socket);
   }
 

@@ -18,20 +18,21 @@ import android.os.RemoteException;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import fi.peltoset.mikko.cameraslider.CameraSliderApplication;
 import fi.peltoset.mikko.cameraslider.interfaces.BluetoothServiceListener;
 import fi.peltoset.mikko.cameraslider.miscellaneous.Constants;
 
 public class BluetoothServiceCommunicator {
   private BluetoothServiceListener listener;
   private Messenger serviceMessenger = null;
-
   private Activity context;
   private BluetoothDevice bluetoothDevice;
-
+  private CameraSliderApplication app;
   private BluetoothAdapter bluetoothAdapter;
 
   private boolean isServiceBound = false;
   private boolean isDeviceConnected = false;
+  private boolean isActionRunning = false;
   private boolean connectOnBind = false;
 
   public BluetoothServiceCommunicator(Activity context, BluetoothServiceListener listener) {
@@ -39,16 +40,42 @@ public class BluetoothServiceCommunicator {
     this.listener = listener;
 
     bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+    app = (CameraSliderApplication) context.getApplication();
 
     startService();
+
+    // If a device is saved, try to connect to it on launch.
+    String deviceAddress = app.preferences.getString(app.PREFERENCES_EXTRA_DEVICE_ADDRESS, null);
+    if (deviceAddress != null && !isDeviceConnected) {
+      connectOnBind = true;
+    }
   }
 
+  /**
+   * Check whether an activity is bound to the service or not.
+   *
+   * @return
+   */
   public boolean isServiceBound() {
     return isServiceBound;
   }
 
+  /**
+   * Check whether or not a device is connected to the Android app
+   *
+   * @return
+   */
   public boolean isDeviceConnected() {
     return isDeviceConnected;
+  }
+
+  /**
+   * Check if a action is running on the device
+   *
+   * @return
+   */
+  public boolean isActionRunning() {
+    return isActionRunning;
   }
 
   /**
@@ -95,11 +122,10 @@ public class BluetoothServiceCommunicator {
   public void bindService() {
     Log.d(Constants.TAG, "BluetoothServiceCommunicator.bindService");
     if (!isServiceRunning(BluetoothService.class)) {
-      Log.d(Constants.TAG, "service not running, why!?");
-      startService();
+      throw new RuntimeException("Service must be running before calling BluetoothServiceCommunicator.bindService()");
     } else {
       Log.d(Constants.TAG, "service running, binding and registering BroadcastReceivers");
-      isServiceBound = context.bindService(new Intent(context, BluetoothService.class), serviceConnection, Context.BIND_AUTO_CREATE);
+      context.bindService(new Intent(context, BluetoothService.class), serviceConnection, Context.BIND_AUTO_CREATE);
 
       // Register a LocalBroadcastManager to receive messages from the background service
       IntentFilter intentFilter = new IntentFilter();
@@ -118,26 +144,26 @@ public class BluetoothServiceCommunicator {
     if (isServiceBound) {
       Log.d(Constants.TAG, "bound, unbinding");
       context.unbindService(serviceConnection);
-      isServiceBound = false;
     }
 
+    // To prevent leaks, unregister receivers
     LocalBroadcastManager.getInstance(context).unregisterReceiver(bluetoothServiceBroadcastReceiver);
   }
 
   /**
-   * Stop service
+   * Stop service. Requires a bound Activity.
    */
   public void stopService() {
-    Log.d(Constants.TAG, "BluetoothServiceCommunicator.stopService");
-    Message msg = Message.obtain(null, BluetoothService.MESSAGE_STOP, 0, 0);
+    if (isServiceRunning(BluetoothService.class) && isServiceBound) {
+      Log.d(Constants.TAG, "BluetoothServiceCommunicator.stopService");
+      Message msg = Message.obtain(null, BluetoothService.MESSAGE_STOP, 0, 0);
 
-    try {
-      serviceMessenger.send(msg);
-    } catch (RemoteException e) {
-      e.printStackTrace();
+      try {
+        serviceMessenger.send(msg);
+      } catch (RemoteException e) {
+        e.printStackTrace();
+      }
     }
-
-//    context.stopService(new Intent(context, BluetoothService.class));
   }
 
   // Used to set up the Messenger for communicating with the Bluetooth device
@@ -145,11 +171,19 @@ public class BluetoothServiceCommunicator {
     @Override
     public void onServiceConnected(ComponentName name, IBinder service) {
       serviceMessenger = new Messenger(service);
+      isServiceBound = true;
+
+      // When the activity is bound to the service (on launch) and connectOnBind is set to true,
+      // try initializing a connection to a previously bound device automatically.
+      if (connectOnBind) {
+        connect(app.preferences.getString(app.PREFERENCES_EXTRA_DEVICE_ADDRESS, null));
+      }
     }
 
     @Override
     public void onServiceDisconnected(ComponentName name) {
       serviceMessenger = null;
+      isServiceBound = false;
     }
   };
 
@@ -176,12 +210,15 @@ public class BluetoothServiceCommunicator {
     public void onReceive(Context context, Intent intent) {
       switch (intent.getAction()) {
         case BluetoothService.INTENT_DEVICE_CONNECTED:
+          isDeviceConnected = true;
           listener.onDeviceConnected(bluetoothDevice);
           break;
         case BluetoothService.INTENT_DEVICE_DISCONNECTED:
+          isDeviceConnected = false;
           listener.onDeviceDisconnected();
           break;
         case BluetoothService.INTENT_DEVICE_DETECTION_FAILED:
+          isDeviceConnected = false;
           listener.onDeviceDetectionFailed();
           break;
       }

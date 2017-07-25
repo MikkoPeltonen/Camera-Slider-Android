@@ -151,7 +151,7 @@ public class CameraSliderMainActivity extends AppCompatActivity
       Log.d(Constants.TAG, "unbinding");
       bluetoothServiceCommunicator.unbindService();
 
-      if (false) {
+      if (!bluetoothServiceCommunicator.isActionRunning()) {
         // Disable Bluetooth and get rid of notification
         Log.d(Constants.TAG, "not running, stopping");
         bluetoothServiceCommunicator.stopService();

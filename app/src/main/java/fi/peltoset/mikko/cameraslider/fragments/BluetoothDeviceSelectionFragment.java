@@ -96,9 +96,13 @@ public class BluetoothDeviceSelectionFragment extends Fragment {
       deviceNameTextView.setText(deviceName);
       deviceAddressTextView.setText(deviceAddress);
       connectionInfoTextView.setText("paired, not connected - tap to connect");
+
+      deviceAddressTextView.setVisibility(View.VISIBLE);
+      connectionInfoTextView.setVisibility(View.VISIBLE);
     } else {
       deviceAddressTextView.setVisibility(View.INVISIBLE);
       connectionInfoTextView.setVisibility(View.INVISIBLE);
+
       deviceNameTextView.setText("NO DEVICE");
     }
 

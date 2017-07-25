@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
-public class ConnectedThread extends Thread {
+public class CameraSliderCommunicatorThread extends Thread {
   private BluetoothSocket socket;
   private BufferedReader bufferedReader;
   private BufferedWriter bufferedWriter;
@@ -21,7 +21,7 @@ public class ConnectedThread extends Thread {
     void onNewMessage(String message);
   }
 
-  public ConnectedThread(BluetoothSocket socket, final SocketListener listener) {
+  public CameraSliderCommunicatorThread(BluetoothSocket socket, final SocketListener listener) {
     this.socket = socket;
     this.listener = listener;
 
@@ -49,6 +49,9 @@ public class ConnectedThread extends Thread {
       cancel();
     } else {
       listener.onConnect();
+
+      // Request device status on initial connection
+      write("STATUS?");
     }
   }
 
