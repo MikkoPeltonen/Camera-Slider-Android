@@ -8,6 +8,7 @@ import android.widget.Toast;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.UUID;
 
 public class ConnectThread extends Thread {
   private final BluetoothSocket socket;
@@ -29,8 +30,10 @@ public class ConnectThread extends Thread {
     BluetoothSocket tmpSocket = null;
 
     try {
-      Method method = device.getClass().getMethod("createRfcommSocket", new Class[] { int.class });
-      tmpSocket = (BluetoothSocket) method.invoke(device, 1);
+//      Method method = device.getClass().getMethod("createRfcommSocket", new Class[] { int.class });
+//      tmpSocket = (BluetoothSocket) method.invoke(device, 1);
+
+      tmpSocket = device.createRfcommSocketToServiceRecord(UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"));
     } catch (Exception e) {
       e.printStackTrace();
     }

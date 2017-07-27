@@ -17,6 +17,7 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+import android.widget.Toast;
 
 import fi.peltoset.mikko.cameraslider.CameraSliderApplication;
 import fi.peltoset.mikko.cameraslider.interfaces.BluetoothServiceListener;
@@ -32,7 +33,7 @@ public class BluetoothServiceCommunicator {
 
   private boolean isServiceBound = false;
   private boolean isDeviceConnected = false;
-  private boolean isActionRunning = false;
+  private boolean isActionRunning = true;
   private boolean connectOnBind = false;
 
   public BluetoothServiceCommunicator(Activity context, BluetoothServiceListener listener) {
@@ -43,12 +44,6 @@ public class BluetoothServiceCommunicator {
     app = (CameraSliderApplication) context.getApplication();
 
     startService();
-
-    // If a device is saved, try to connect to it on launch.
-    String deviceAddress = app.preferences.getString(app.PREFERENCES_EXTRA_DEVICE_ADDRESS, null);
-    if (deviceAddress != null && !isDeviceConnected) {
-      connectOnBind = true;
-    }
   }
 
   /**
@@ -132,6 +127,12 @@ public class BluetoothServiceCommunicator {
       intentFilter.addAction(BluetoothService.INTENT_DEVICE_CONNECTED);
       intentFilter.addAction(BluetoothService.INTENT_DEVICE_DISCONNECTED);
       intentFilter.addAction(BluetoothService.INTENT_DEVICE_DETECTION_FAILED);
+      intentFilter.addAction(BluetoothService.INTENT_ACTION_STARTED);
+      intentFilter.addAction(BluetoothService.INTENT_ACTION_PAUSED);
+      intentFilter.addAction(BluetoothService.INTENT_ACTION_RESUMED);
+      intentFilter.addAction(BluetoothService.INTENT_ACTION_STOPPED);
+      intentFilter.addAction(BluetoothService.INTENT_STATUS_DEVICE_CONNECTED);
+      intentFilter.addAction(BluetoothService.INTENT_STATUS_DEVICE_NOT_CONNECTED);
       LocalBroadcastManager.getInstance(context).registerReceiver(bluetoothServiceBroadcastReceiver, intentFilter);
     }
   }
@@ -173,17 +174,17 @@ public class BluetoothServiceCommunicator {
       serviceMessenger = new Messenger(service);
       isServiceBound = true;
 
-      // When the activity is bound to the service (on launch) and connectOnBind is set to true,
-      // try initializing a connection to a previously bound device automatically.
-      if (connectOnBind) {
+      // If a device is saved, try to connect to it on launch.
+      String deviceAddress = app.preferences.getString(app.PREFERENCES_EXTRA_DEVICE_ADDRESS, null);
+      if (deviceAddress != null && !isDeviceConnected) {
         connect(app.preferences.getString(app.PREFERENCES_EXTRA_DEVICE_ADDRESS, null));
       }
     }
 
     @Override
     public void onServiceDisconnected(ComponentName name) {
-      serviceMessenger = null;
       isServiceBound = false;
+      serviceMessenger = null;
     }
   };
 
@@ -220,6 +221,9 @@ public class BluetoothServiceCommunicator {
         case BluetoothService.INTENT_DEVICE_DETECTION_FAILED:
           isDeviceConnected = false;
           listener.onDeviceDetectionFailed();
+          break;
+        case BluetoothService.INTENT_STATUS_DEVICE_CONNECTED:
+          isDeviceConnected = true;
           break;
       }
     }

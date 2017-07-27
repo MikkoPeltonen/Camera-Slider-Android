@@ -2,6 +2,7 @@ package fi.peltoset.mikko.cameraslider.notifications;
 
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v4.app.NotificationCompat;
@@ -9,6 +10,7 @@ import android.support.v4.app.TaskStackBuilder;
 import android.widget.RemoteViews;
 
 import fi.peltoset.mikko.cameraslider.R;
+import fi.peltoset.mikko.cameraslider.activities.CameraSliderMainActivity;
 import fi.peltoset.mikko.cameraslider.activities.RecordingRunningActivity;
 import fi.peltoset.mikko.cameraslider.interfaces.NotificationCommunicatorListener;
 
@@ -17,9 +19,10 @@ public class NotificationCommunicator {
   private static final String INTENT_PAUSE_PLAY_BUTTON_PRESSED = "INTENT_PAUSE_PLAY_BUTTON_PRESSED";
   private static final String INTENT_STOP_BUTTON_PRESSED = "INTENT_STOP_BUTTON_PRESSED";
 
-  private static final int NOTIFICATION_TIMELAPSE = 1;
+  private static final int NOTIFICATION_ID = 1;
 
   private Context context;
+  private Service service;
   private NotificationCommunicatorListener listener;
   private NotificationManager notificationManager;
 
@@ -31,14 +34,18 @@ public class NotificationCommunicator {
   private int currentKeyframe;
   private int completePercentage;
 
-  public NotificationCommunicator(Context context, NotificationCommunicatorListener listener) {
-    this.context = context;
+  public NotificationCommunicator(Service service, NotificationCommunicatorListener listener) {
+    this.service = service;
+    this.context = (Context) service;
     this.listener = listener;
 
     notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
   }
 
-  public void displaySampleNotification() {
+  /**
+   * Display timelapse notification
+   */
+  public void displayTimelapseNotification() {
     NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context);
 
     // Using TaskStackBuilder, we can add the main activity in the back stack so that it is opened
@@ -71,16 +78,50 @@ public class NotificationCommunicator {
         .setContent(smallContentView)
         .setCustomBigContentView(bigContentView)
         .setSmallIcon(R.drawable.ic_linked_camera_white_48dp)
+        .setPriority(-1)
         .setAutoCancel(false)
         .setOngoing(true);
 
 //    bigContentView.setOnClickPendingIntent(R.id.pauseButton, pause);
 //    bigContentView.setOnClickPendingIntent(R.id.stopButton, stop);
 
-    notificationManager.notify(NOTIFICATION_TIMELAPSE, notificationBuilder.build());
+    ((Service) context).startForeground(NOTIFICATION_ID, notificationBuilder.build());
+  }
+
+  /**
+   * Display status bar info notification
+   *
+   * @param headerText
+   * @param contentText
+   */
+  public void displayInfoNotification(String headerText, String contentText) {
+    NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context);
+
+    TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
+
+    stackBuilder.addParentStack(CameraSliderMainActivity.class);
+    stackBuilder.addNextIntent(new Intent(context, CameraSliderMainActivity.class));
+
+    PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+
+    RemoteViews contentView = new RemoteViews(context.getPackageName(), R.layout.notification_info);
+
+    contentView.setImageViewResource(R.id.notificationIcon, R.mipmap.ic_launcher_camera);
+    contentView.setTextViewText(R.id.infoHeader, headerText);
+    contentView.setTextViewText(R.id.infoText, contentText);
+
+    notificationBuilder
+        .setSmallIcon(R.drawable.ic_linked_camera_white_48dp)
+        .setOngoing(true)
+        .setAutoCancel(false)
+        .setContent(contentView)
+        .setPriority(-1)
+        .setContentIntent(resultPendingIntent);
+
+    ((Service) context).startForeground(NOTIFICATION_ID, notificationBuilder.build());
   }
 
   public void cancel() {
-    notificationManager.cancel(NOTIFICATION_TIMELAPSE);
+    notificationManager.cancel(NOTIFICATION_ID);
   }
 }

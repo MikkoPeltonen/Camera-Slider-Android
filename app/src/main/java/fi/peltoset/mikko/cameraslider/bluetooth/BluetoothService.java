@@ -14,7 +14,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,6 +31,12 @@ public class BluetoothService extends Service {
   public static final String INTENT_DEVICE_CONNECTED = "INTENT_DEVICE_CONNECTED";
   public static final String INTENT_DEVICE_DISCONNECTED = "INTENT_DEVICE_DISCONNECTED";
   public static final String INTENT_DEVICE_DETECTION_FAILED = "INTENT_DEVICE_DETECTION_FAILED";
+  public static final String INTENT_ACTION_STARTED = "INTENT_ACTION_STARTED";
+  public static final String INTENT_ACTION_PAUSED = "INTENT_ACTION_PAUSED";
+  public static final String INTENT_ACTION_RESUMED = "INTENT_ACTION_RESUMED";
+  public static final String INTENT_ACTION_STOPPED = "INTENT_ACTION_STOPPED";
+  public static final String INTENT_STATUS_DEVICE_CONNECTED = "INTENT_STATUS_DEVICE_CONNECTED";
+  public static final String INTENT_STATUS_DEVICE_NOT_CONNECTED = "INTENT_STATUS_DEVICE_NOT_CONNECTED";
 
   public static final String EXTRA_DEVICE_ADDRESS = "EXTRA_DEVICE_ADDRESS";
   public static final String EXTRA_ACTION_TYPE = "EXTRA_ACTION_TYPE";
@@ -45,6 +50,9 @@ public class BluetoothService extends Service {
   private NotificationCommunicator notificationCommunicator;
   private CameraSliderCommunicatorThread cameraSlider;
 
+  private String connectedDeviceAddress = null;
+
+  private boolean isDeviceConnected = false;
   private boolean isActionRunning = false;
 
   // Handle incoming messages from BluetoothServiceCommunicator
@@ -88,9 +96,9 @@ public class BluetoothService extends Service {
       }
     });
 
-//    notificationCommunicator.displaySampleNotification();
+    notificationCommunicator.displayInfoNotification("Camera Slider", "Device not connected");
 
-    return super.onStartCommand(intent, flags, startId);
+    return START_STICKY;
   }
 
   // Called when an Activity calls bindService. Returns the Messenger used to send data back to
@@ -98,6 +106,12 @@ public class BluetoothService extends Service {
   @Nullable
   @Override
   public IBinder onBind(Intent intent) {
+    // When an activity binds to the service and if a device is already connected, notify the
+    // listener
+    if (isDeviceConnected) {
+      localBroadcastManager.sendBroadcast(new Intent(INTENT_STATUS_DEVICE_CONNECTED));
+    }
+
     return messenger.getBinder();
   }
 
@@ -106,7 +120,7 @@ public class BluetoothService extends Service {
    *
    * @param address
    */
-  private void connectToDevice(String address) {
+  private void connectToDevice(final String address) {
     bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
     bluetoothAdapter.cancelDiscovery();
@@ -117,6 +131,7 @@ public class BluetoothService extends Service {
       @Override
       public void onConnect(BluetoothSocket socket) {
         bluetoothSocket = socket;
+        connectedDeviceAddress = address;
         onDeviceConnected();
       }
     });
@@ -195,17 +210,22 @@ public class BluetoothService extends Service {
       @Override
       public void onConnect() {
         Log.i(Constants.TAG, "device connected");
+        notificationCommunicator.displayInfoNotification("Camera Slider", "Connected to device - stopped");
         localBroadcastManager.sendBroadcast(new Intent(INTENT_DEVICE_CONNECTED));
       }
 
       @Override
       public void onDisconnect() {
         Log.i(Constants.TAG, "device disconnected");
+        notificationCommunicator.displayInfoNotification("Camera Slider", "Not connected");
+        localBroadcastManager.sendBroadcast(new Intent(INTENT_DEVICE_DISCONNECTED));
       }
 
       @Override
       public void onDeviceDetectionFail() {
         Log.i(Constants.TAG, "detection failed");
+        notificationCommunicator.displayInfoNotification("Camera Slider", "Not connected");
+        localBroadcastManager.sendBroadcast(new Intent(INTENT_DEVICE_DETECTION_FAILED));
       }
 
       @Override
