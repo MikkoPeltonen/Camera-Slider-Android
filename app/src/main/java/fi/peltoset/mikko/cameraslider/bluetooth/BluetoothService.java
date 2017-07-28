@@ -37,6 +37,7 @@ public class BluetoothService extends Service {
   public static final String INTENT_ACTION_STOPPED = "INTENT_ACTION_STOPPED";
   public static final String INTENT_STATUS_DEVICE_CONNECTED = "INTENT_STATUS_DEVICE_CONNECTED";
   public static final String INTENT_STATUS_DEVICE_NOT_CONNECTED = "INTENT_STATUS_DEVICE_NOT_CONNECTED";
+  public static final String INTENT_DEVICE_CONNECTION_FAILED = "INTENT_DEVICE_CONNECTION_FAILED";
 
   public static final String EXTRA_DEVICE_ADDRESS = "EXTRA_DEVICE_ADDRESS";
   public static final String EXTRA_ACTION_TYPE = "EXTRA_ACTION_TYPE";
@@ -96,7 +97,8 @@ public class BluetoothService extends Service {
       }
     });
 
-    notificationCommunicator.displayInfoNotification("Camera Slider", "Device not connected");
+    // To keep the service running indefinitely we must start a sticky notification
+    notificationCommunicator.displayInfoNotification("Camera Slider", "Not connected");
 
     return START_STICKY;
   }
@@ -167,16 +169,16 @@ public class BluetoothService extends Service {
     cameraSlider.write("END_TRANSACTION");
   }
 
-  private void getCameraSliderStatus() {
-    cameraSlider.write("STATUS?");
-  }
-
   /**
    * Cancel all notifications and stop the background service
    */
   private void stopAndCancelNotification() {
     notificationCommunicator.cancel();
-    cameraSlider.cancel();
+
+    if (cameraSlider != null) {
+      cameraSlider.cancel();
+    }
+
     stopSelf();
   }
 
@@ -210,15 +212,26 @@ public class BluetoothService extends Service {
       @Override
       public void onConnect() {
         Log.i(Constants.TAG, "device connected");
-        notificationCommunicator.displayInfoNotification("Camera Slider", "Connected to device - stopped");
+        notificationCommunicator.displayInfoNotification("Camera Slider", "Connected");
         localBroadcastManager.sendBroadcast(new Intent(INTENT_DEVICE_CONNECTED));
+        isDeviceConnected = true;
       }
 
       @Override
       public void onDisconnect() {
-        Log.i(Constants.TAG, "device disconnected");
+        if (isDeviceConnected) {
+          Log.i(Constants.TAG, "device disconnected");
+          notificationCommunicator.displayInfoNotification("Camera Slider", "Not connected");
+          localBroadcastManager.sendBroadcast(new Intent(INTENT_DEVICE_DISCONNECTED));
+        }
+
+        isDeviceConnected = false;
+      }
+
+      @Override
+      public void onConnectionFailed() {
         notificationCommunicator.displayInfoNotification("Camera Slider", "Not connected");
-        localBroadcastManager.sendBroadcast(new Intent(INTENT_DEVICE_DISCONNECTED));
+        localBroadcastManager.sendBroadcast(new Intent(INTENT_DEVICE_CONNECTION_FAILED));
       }
 
       @Override

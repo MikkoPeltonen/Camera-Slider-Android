@@ -17,7 +17,6 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.widget.Toast;
 
 import fi.peltoset.mikko.cameraslider.CameraSliderApplication;
 import fi.peltoset.mikko.cameraslider.interfaces.BluetoothServiceListener;
@@ -33,8 +32,7 @@ public class BluetoothServiceCommunicator {
 
   private boolean isServiceBound = false;
   private boolean isDeviceConnected = false;
-  private boolean isActionRunning = true;
-  private boolean connectOnBind = false;
+  private boolean isActionRunning = false;
 
   public BluetoothServiceCommunicator(Activity context, BluetoothServiceListener listener) {
     this.context = context;
@@ -133,6 +131,7 @@ public class BluetoothServiceCommunicator {
       intentFilter.addAction(BluetoothService.INTENT_ACTION_STOPPED);
       intentFilter.addAction(BluetoothService.INTENT_STATUS_DEVICE_CONNECTED);
       intentFilter.addAction(BluetoothService.INTENT_STATUS_DEVICE_NOT_CONNECTED);
+      intentFilter.addAction(BluetoothService.INTENT_DEVICE_CONNECTION_FAILED);
       LocalBroadcastManager.getInstance(context).registerReceiver(bluetoothServiceBroadcastReceiver, intentFilter);
     }
   }
@@ -224,6 +223,10 @@ public class BluetoothServiceCommunicator {
           break;
         case BluetoothService.INTENT_STATUS_DEVICE_CONNECTED:
           isDeviceConnected = true;
+          break;
+        case BluetoothService.INTENT_DEVICE_CONNECTION_FAILED:
+          isDeviceConnected = false;
+
           break;
       }
     }

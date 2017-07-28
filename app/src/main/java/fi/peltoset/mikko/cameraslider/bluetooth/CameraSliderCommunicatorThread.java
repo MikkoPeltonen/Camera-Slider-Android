@@ -20,6 +20,7 @@ public class CameraSliderCommunicatorThread extends Thread {
   interface SocketListener {
     void onConnect();
     void onDisconnect();
+    void onConnectionFailed();
     void onDeviceDetectionFail();
     void onNewMessage(String message);
   }
@@ -43,7 +44,7 @@ public class CameraSliderCommunicatorThread extends Thread {
     try {
       initialLine = bufferedReader.readLine();
     } catch (IOException e) {
-      listener.onDisconnect();
+      listener.onConnectionFailed();
       e.printStackTrace();
     }
 

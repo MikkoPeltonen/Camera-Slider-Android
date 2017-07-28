@@ -6,4 +6,5 @@ public interface BluetoothServiceListener {
   void onDeviceConnected(BluetoothDevice device);
   void onDeviceDisconnected();
   void onDeviceDetectionFailed();
+  void onDeviceConnectionFailed();
 }

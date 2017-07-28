@@ -1,12 +1,15 @@
 package fi.peltoset.mikko.cameraslider.miscellaneous;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 
 /**
  *
  */
-public class KeyframePOJO {
+public class KeyframePOJO implements Parcelable {
   private int duration = 0; // milliseconds
   private int slideLength = 0; // mm
   private int panAngle = 0; // 1/100 of a degree
@@ -119,5 +122,43 @@ public class KeyframePOJO {
     DecimalFormat df = new DecimalFormat("0.00");
     df.setRoundingMode(RoundingMode.HALF_UP);
     return df.format(angle / 100.0);
+  }
+
+  // Parcelable stuff
+
+  @Override
+  public int describeContents() {
+    return 0;
+  }
+
+  @Override
+  public void writeToParcel(Parcel out, int flags) {
+    out.writeInt(duration);
+    out.writeInt(slideLength);
+    out.writeInt(panAngle);
+    out.writeInt(tiltAngle);
+    out.writeInt(zoom);
+    out.writeInt(focus);
+  }
+
+  public static final Parcelable.Creator<KeyframePOJO> CREATOR = new Parcelable.Creator<KeyframePOJO>() {
+    @Override
+    public KeyframePOJO createFromParcel(Parcel source) {
+      return new KeyframePOJO(source);
+    }
+
+    @Override
+    public KeyframePOJO[] newArray(int size) {
+      return new KeyframePOJO[size];
+    }
+  };
+
+  private KeyframePOJO(Parcel in) {
+    duration = in.readInt();
+    slideLength = in.readInt();
+    panAngle = in.readInt();
+    tiltAngle = in.readInt();
+    zoom = in.readInt();
+    focus = in.readInt();
   }
 }
