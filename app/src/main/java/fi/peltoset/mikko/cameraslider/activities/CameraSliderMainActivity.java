@@ -38,6 +38,14 @@ public class CameraSliderMainActivity extends AppCompatActivity
   private ProgressDialog progressDialog;
   private String activeFragmentTag = null;
 
+  private Class<?>[] fragmentClasses = {
+      ManualModeFragment.class,
+      MotorizedMovementFragment.class,
+      PanoramaFragment.class,
+      BluetoothDeviceSelectionFragment.class,
+      SettingsFragment.class
+  };
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -74,15 +82,11 @@ public class CameraSliderMainActivity extends AppCompatActivity
 
     if (savedInstanceState == null) {
       activeFragmentTag = ManualModeFragment.class.getName();
-
-      Log.d(Constants.TAG, "KAKKAKUKKANEN");
       navigationView.setCheckedItem(R.id.nav_manual);
       fragmentManager.beginTransaction().add(R.id.content_frame, ManualModeFragment.newInstance(), activeFragmentTag).commit();
 
     } else {
-      Log.d(Constants.TAG, "JUUSTOKÄRPÄNEN");
       activeFragmentTag = savedInstanceState.getString("ACTIVE_FRAGMENT", ManualModeFragment.class.getName());
-      Log.d(Constants.TAG, "!!!!!!!!!!!!!!!!!!!!!" + savedInstanceState.getString("ACTIVE_FRAGMENT"));
 
       Fragment visibleFragment = null;
       if (activeFragmentTag.equals(ManualModeFragment.class.getName())) {
@@ -105,8 +109,6 @@ public class CameraSliderMainActivity extends AppCompatActivity
         } else {
           fragmentTransaction.hide(visibleFragment);
         }
-
-//        fragmentManager.beginTransaction().add(R.id.content_frame, visibleFragment, activeFragmentTag).commit();
       }
     }
 
@@ -206,15 +208,6 @@ public class CameraSliderMainActivity extends AppCompatActivity
     }
   }
 
-
-  Class<?>[] classes = {
-      ManualModeFragment.class,
-      MotorizedMovementFragment.class,
-      PanoramaFragment.class,
-      BluetoothDeviceSelectionFragment.class,
-      SettingsFragment.class
-  };
-
   /**
    * Handle fragment changes from the navigation drawer.
    *
@@ -249,7 +242,7 @@ public class CameraSliderMainActivity extends AppCompatActivity
 
     // Go through all fragments and hide all others except the selected one. It shouldn't be visible
     // but test anyways for safety.
-    for (Class<?> fragmentClass : classes) {
+    for (Class<?> fragmentClass : fragmentClasses) {
       String fragmentClassName = fragmentClass.getName();
 
       if (fragmentClassName.equals(selectedFragmentClass.getName())) {
@@ -292,6 +285,14 @@ public class CameraSliderMainActivity extends AppCompatActivity
     progressDialog.show();
 
     bluetoothServiceCommunicator.connect(device.getAddress());
+  }
+
+  @Override
+  public void reconnect() {
+    String deviceAddress = app.preferences.getString(app.PREFERENCES_EXTRA_DEVICE_ADDRESS, null);
+    if (deviceAddress != null) {
+      bluetoothServiceCommunicator.connect(deviceAddress);
+    }
   }
 
   /**

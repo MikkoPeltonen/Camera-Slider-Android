@@ -226,7 +226,6 @@ public class BluetoothServiceCommunicator {
           break;
         case BluetoothService.INTENT_DEVICE_CONNECTION_FAILED:
           isDeviceConnected = false;
-
           break;
       }
     }

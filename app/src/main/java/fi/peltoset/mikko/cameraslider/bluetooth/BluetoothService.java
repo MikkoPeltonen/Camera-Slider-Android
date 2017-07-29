@@ -4,7 +4,10 @@ import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -13,6 +16,7 @@ import android.os.Messenger;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -47,7 +51,6 @@ public class BluetoothService extends Service {
 
   private LocalBroadcastManager localBroadcastManager;
   private BluetoothAdapter bluetoothAdapter;
-  private BluetoothSocket bluetoothSocket;
   private NotificationCommunicator notificationCommunicator;
   private CameraSliderCommunicatorThread cameraSlider;
 
@@ -100,7 +103,18 @@ public class BluetoothService extends Service {
     // To keep the service running indefinitely we must start a sticky notification
     notificationCommunicator.displayInfoNotification("Camera Slider", "Not connected");
 
+    IntentFilter intentFilter = new IntentFilter();
+    intentFilter.addAction(NotificationCommunicator.INTENT_RECONNECT);
+    registerReceiver(notificationBroadcastReceiver, intentFilter);
+
     return START_STICKY;
+  }
+
+  @Override
+  public void onDestroy() {
+    super.onDestroy();
+
+    unregisterReceiver(notificationBroadcastReceiver);
   }
 
   // Called when an Activity calls bindService. Returns the Messenger used to send data back to
@@ -115,30 +129,6 @@ public class BluetoothService extends Service {
     }
 
     return messenger.getBinder();
-  }
-
-  /**
-   * Try initializing a connection to a Bluetooth device
-   *
-   * @param address
-   */
-  private void connectToDevice(final String address) {
-    bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-
-    bluetoothAdapter.cancelDiscovery();
-
-    BluetoothDevice device = bluetoothAdapter.getRemoteDevice(address);
-
-    ConnectThread connectThread = new ConnectThread(device, new ConnectThread.OnConnectListener() {
-      @Override
-      public void onConnect(BluetoothSocket socket) {
-        bluetoothSocket = socket;
-        connectedDeviceAddress = address;
-        onDeviceConnected();
-      }
-    });
-
-    connectThread.start();
   }
 
   /**
@@ -207,46 +197,104 @@ public class BluetoothService extends Service {
     }
   }
 
-  private void onDeviceConnected() {
-    cameraSlider = new CameraSliderCommunicatorThread(bluetoothSocket, new CameraSliderCommunicatorThread.SocketListener() {
+  /**
+   * Try initializing a connection to a Bluetooth device
+   *
+   * @param address
+   */
+  private void connectToDevice(String address) {
+    bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+    bluetoothAdapter.cancelDiscovery();
+
+    BluetoothDevice device = bluetoothAdapter.getRemoteDevice(address);
+
+    // Asynchronously connect to the Bluetooth device
+    ConnectThread connectThread = new ConnectThread(device, new ConnectThread.ConnectThreadListener() {
       @Override
-      public void onConnect() {
-        Log.i(Constants.TAG, "device connected");
-        notificationCommunicator.displayInfoNotification("Camera Slider", "Connected");
-        localBroadcastManager.sendBroadcast(new Intent(INTENT_DEVICE_CONNECTED));
-        isDeviceConnected = true;
+      public void onConnect(BluetoothSocket socket) {
+        cameraSlider = new CameraSliderCommunicatorThread(socket, cameraSliderListener);
+        cameraSlider.start();
       }
 
       @Override
-      public void onDisconnect() {
-        if (isDeviceConnected) {
-          Log.i(Constants.TAG, "device disconnected");
-          notificationCommunicator.displayInfoNotification("Camera Slider", "Not connected");
-          localBroadcastManager.sendBroadcast(new Intent(INTENT_DEVICE_DISCONNECTED));
-        }
-
-        isDeviceConnected = false;
-      }
-
-      @Override
-      public void onConnectionFailed() {
-        notificationCommunicator.displayInfoNotification("Camera Slider", "Not connected");
-        localBroadcastManager.sendBroadcast(new Intent(INTENT_DEVICE_CONNECTION_FAILED));
-      }
-
-      @Override
-      public void onDeviceDetectionFail() {
-        Log.i(Constants.TAG, "detection failed");
-        notificationCommunicator.displayInfoNotification("Camera Slider", "Not connected");
-        localBroadcastManager.sendBroadcast(new Intent(INTENT_DEVICE_DETECTION_FAILED));
-      }
-
-      @Override
-      public void onNewMessage(String message) {
-        handleCameraSliderMessages(message);
+      public void onConnectionFail() {
+        Log.d(Constants.TAG, "couldn't connect to a device");
       }
     });
 
-    cameraSlider.start();
+    connectThread.start();
   }
+
+  // Handle CameraSliderCommunicatorThread messages.
+  private CameraSliderCommunicatorThread.SocketListener cameraSliderListener = new CameraSliderCommunicatorThread.SocketListener() {
+    // Called when a device is successfully connected and it is detected
+    @Override
+    public void onConnect(String deviceAddress) {
+      Log.i(Constants.TAG, "device connected");
+
+      notificationCommunicator.displayInfoNotification("Camera Slider", "Connected");
+      localBroadcastManager.sendBroadcast(new Intent(INTENT_DEVICE_CONNECTED));
+
+      isDeviceConnected = true;
+      connectedDeviceAddress = deviceAddress;
+    }
+
+    // Called when a Camera Slider is disconnected. Won't be called if disconnecting another device
+    @Override
+    public void onDisconnect() {
+      if (isDeviceConnected) {
+        Log.i(Constants.TAG, "device disconnected");
+        localBroadcastManager.sendBroadcast(new Intent(INTENT_DEVICE_DISCONNECTED));
+
+        // Because the device was previously connected, display a notification that tells to tap
+        // to reconnect
+        notificationCommunicator.displayTapToConnectNotification();
+      }
+
+      isDeviceConnected = false;
+    }
+
+    // Called when connecting to a device failed
+    @Override
+    public void onConnectionFailed() {
+      notificationCommunicator.displayInfoNotification("Camera Slider", "Not connected");
+      localBroadcastManager.sendBroadcast(new Intent(INTENT_DEVICE_CONNECTION_FAILED));
+    }
+
+    // Called when the connection was successful but the device was not detected as a Camera Slider
+    @Override
+    public void onDeviceDetectionFail() {
+      Log.i(Constants.TAG, "detection failed");
+      notificationCommunicator.displayInfoNotification("Camera Slider", "Not connected");
+      localBroadcastManager.sendBroadcast(new Intent(INTENT_DEVICE_DETECTION_FAILED));
+    }
+
+    // Called every time the Bluetooth device sends a message
+    @Override
+    public void onNewMessage(String message) {
+      handleCameraSliderMessages(message);
+    }
+  };
+
+  /**
+   * Listen to actions from notifications
+   */
+  private BroadcastReceiver notificationBroadcastReceiver = new BroadcastReceiver() {
+    @Override
+    public void onReceive(Context context, Intent intent) {
+      String action = intent.getAction();
+
+      switch (action) {
+        case NotificationCommunicator.INTENT_PAUSE_PLAY_BUTTON_PRESSED:
+          break;
+        case NotificationCommunicator.INTENT_STOP_BUTTON_PRESSED:
+          break;
+        case NotificationCommunicator.INTENT_RECONNECT:
+          connectToDevice(connectedDeviceAddress);
+          Toast.makeText(context, "Reconnecting...", Toast.LENGTH_SHORT).show();
+          break;
+      }
+    }
+  };
 }

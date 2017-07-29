@@ -4,4 +4,5 @@ import android.bluetooth.BluetoothDevice;
 
 public interface BluetoothDeviceSelectionListener {
   void onBluetoothDeviceSelected(BluetoothDevice device);
+  void reconnect();
 }

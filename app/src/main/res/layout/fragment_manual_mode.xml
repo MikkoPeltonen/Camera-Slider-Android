@@ -28,7 +28,7 @@
             android:id="@+id/textView10"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="move manuall and set the home position"
+            android:text="move manually and set the home position"
             android:textColor="#ffffff"/>
 
     </LinearLayout>

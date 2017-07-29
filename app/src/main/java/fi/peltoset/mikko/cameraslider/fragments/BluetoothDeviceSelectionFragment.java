@@ -18,6 +18,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -53,6 +54,7 @@ public class BluetoothDeviceSelectionFragment extends Fragment {
   private TextView deviceNameTextView;
   private TextView deviceAddressTextView;
   private TextView connectionInfoTextView;
+  private LinearLayout deviceInfoPanel;
 
   private String deviceName;
   private String deviceAddress;
@@ -91,6 +93,7 @@ public class BluetoothDeviceSelectionFragment extends Fragment {
     deviceNameTextView = (TextView) view.findViewById(R.id.deviceName);
     deviceAddressTextView = (TextView) view.findViewById(R.id.deviceAddress);
     connectionInfoTextView = (TextView) view.findViewById(R.id.connectionInfo);
+    deviceInfoPanel = (LinearLayout) view.findViewById(R.id.deviceInfoPanel);
 
     if (deviceName != null && deviceAddress != null) {
       deviceNameTextView.setText(deviceName);
@@ -105,6 +108,15 @@ public class BluetoothDeviceSelectionFragment extends Fragment {
 
       deviceNameTextView.setText("NO DEVICE");
     }
+
+    // If a device is previously connected but is not active at the moment, clicking on the
+    // top info panel should try to reconnect
+    deviceInfoPanel.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        listener.reconnect();
+      }
+    });
 
     pairedBluetoothDevicesListView.setAdapter(pairedBluetoothDevicesArrayAdapter);
     pairedBluetoothDevicesListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {

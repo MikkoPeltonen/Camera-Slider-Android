@@ -16,8 +16,9 @@ import fi.peltoset.mikko.cameraslider.interfaces.NotificationCommunicatorListene
 
 public class NotificationCommunicator {
 
-  private static final String INTENT_PAUSE_PLAY_BUTTON_PRESSED = "INTENT_PAUSE_PLAY_BUTTON_PRESSED";
-  private static final String INTENT_STOP_BUTTON_PRESSED = "INTENT_STOP_BUTTON_PRESSED";
+  public static final String INTENT_PAUSE_PLAY_BUTTON_PRESSED = "INTENT_PAUSE_PLAY_BUTTON_PRESSED";
+  public static final String INTENT_STOP_BUTTON_PRESSED = "INTENT_STOP_BUTTON_PRESSED";
+  public static final String INTENT_RECONNECT = "INTENT_RECONNECT";
 
   private static final int NOTIFICATION_ID = 1;
 
@@ -95,7 +96,7 @@ public class NotificationCommunicator {
    * @param contentText
    */
   public void displayInfoNotification(String headerText, String contentText) {
-    NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context);
+    NotificationCompat.Builder notificationBuilder = constructInfoNotification(headerText, contentText);
 
     TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
 
@@ -103,6 +104,24 @@ public class NotificationCommunicator {
     stackBuilder.addNextIntent(new Intent(context, CameraSliderMainActivity.class));
 
     PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+
+    notificationBuilder.setContentIntent(resultPendingIntent);
+
+    ((Service) context).startForeground(NOTIFICATION_ID, notificationBuilder.build());
+  }
+
+  public void displayTapToConnectNotification() {
+    NotificationCompat.Builder notificationBuilder = constructInfoNotification("Camera Slider", "Disconnected, tap to reconnect");
+
+    PendingIntent resultPendingIntent = PendingIntent.getBroadcast(context, 0, new Intent(INTENT_RECONNECT), 0);
+
+    notificationBuilder.setContentIntent(resultPendingIntent);
+
+    ((Service) context).startForeground(NOTIFICATION_ID, notificationBuilder.build());
+  }
+
+  private NotificationCompat.Builder constructInfoNotification(String headerText, String contentText) {
+    NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context);
 
     RemoteViews contentView = new RemoteViews(context.getPackageName(), R.layout.notification_info);
 
@@ -115,12 +134,14 @@ public class NotificationCommunicator {
         .setOngoing(true)
         .setAutoCancel(false)
         .setContent(contentView)
-        .setPriority(-1)
-        .setContentIntent(resultPendingIntent);
+        .setPriority(-1);
 
-    ((Service) context).startForeground(NOTIFICATION_ID, notificationBuilder.build());
+    return notificationBuilder;
   }
 
+  /**
+   * Remove all notifications
+   */
   public void cancel() {
     notificationManager.cancel(NOTIFICATION_ID);
   }

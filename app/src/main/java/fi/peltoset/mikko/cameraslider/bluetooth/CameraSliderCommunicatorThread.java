@@ -18,7 +18,7 @@ public class CameraSliderCommunicatorThread extends Thread {
   private SocketListener listener;
 
   interface SocketListener {
-    void onConnect();
+    void onConnect(String deviceAddress);
     void onDisconnect();
     void onConnectionFailed();
     void onDeviceDetectionFail();
@@ -52,7 +52,7 @@ public class CameraSliderCommunicatorThread extends Thread {
       listener.onDeviceDetectionFail();
       cancel();
     } else {
-      listener.onConnect();
+      listener.onConnect(socket.getRemoteDevice().getAddress());
 
       // Request device status on initial connection
       write("STATUS?");
@@ -69,7 +69,6 @@ public class CameraSliderCommunicatorThread extends Thread {
       bufferedWriter.write(message + "\n");
       bufferedWriter.flush();
     } catch (IOException e) {
-      Log.d(Constants.TAG, "write disconnect");
       listener.onDisconnect();
       cancel();
       e.printStackTrace();
@@ -86,7 +85,6 @@ public class CameraSliderCommunicatorThread extends Thread {
         listener.onNewMessage(line);
       }
     } catch (IOException e) {
-      Log.d(Constants.TAG, "run read disconnect");
       listener.onDisconnect();
       cancel();
       e.printStackTrace();
