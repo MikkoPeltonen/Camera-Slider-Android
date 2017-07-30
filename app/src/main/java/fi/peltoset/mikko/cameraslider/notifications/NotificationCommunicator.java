@@ -92,11 +92,10 @@ public class NotificationCommunicator {
   /**
    * Display status bar info notification
    *
-   * @param headerText
    * @param contentText
    */
-  public void displayInfoNotification(String headerText, String contentText) {
-    NotificationCompat.Builder notificationBuilder = constructInfoNotification(headerText, contentText);
+  public void displayInfoNotification(int contentText) {
+    NotificationCompat.Builder notificationBuilder = constructInfoNotification("Camera Slider", contentText);
 
     TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
 
@@ -111,7 +110,7 @@ public class NotificationCommunicator {
   }
 
   public void displayTapToConnectNotification() {
-    NotificationCompat.Builder notificationBuilder = constructInfoNotification("Camera Slider", "Disconnected, tap to reconnect");
+    NotificationCompat.Builder notificationBuilder = constructInfoNotification("Camera Slider", R.string.notification_connection_lost);
 
     PendingIntent resultPendingIntent = PendingIntent.getBroadcast(context, 0, new Intent(INTENT_RECONNECT), 0);
 
@@ -120,14 +119,14 @@ public class NotificationCommunicator {
     ((Service) context).startForeground(NOTIFICATION_ID, notificationBuilder.build());
   }
 
-  private NotificationCompat.Builder constructInfoNotification(String headerText, String contentText) {
+  private NotificationCompat.Builder constructInfoNotification(String headerText, int contentText) {
     NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context);
 
     RemoteViews contentView = new RemoteViews(context.getPackageName(), R.layout.notification_info);
 
     contentView.setImageViewResource(R.id.notificationIcon, R.mipmap.ic_launcher_camera);
     contentView.setTextViewText(R.id.infoHeader, headerText);
-    contentView.setTextViewText(R.id.infoText, contentText);
+    contentView.setTextViewText(R.id.infoText, context.getText(contentText));
 
     notificationBuilder
         .setSmallIcon(R.drawable.ic_linked_camera_white_48dp)

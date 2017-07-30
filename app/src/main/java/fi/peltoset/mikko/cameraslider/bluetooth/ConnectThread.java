@@ -70,5 +70,7 @@ public class ConnectThread extends Thread {
     } catch (IOException e) {
       e.printStackTrace();
     }
+
+    Thread.currentThread().interrupt();
   }
 }

@@ -7,4 +7,5 @@ public interface BluetoothServiceListener {
   void onDeviceDisconnected();
   void onDeviceDetectionFailed();
   void onDeviceConnectionFailed();
+  void onServiceBound();
 }

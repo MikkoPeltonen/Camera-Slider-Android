@@ -17,9 +17,15 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+
+import java.lang.reflect.Constructor;
+
 import fi.peltoset.mikko.cameraslider.CameraSliderApplication;
 import fi.peltoset.mikko.cameraslider.R;
 import fi.peltoset.mikko.cameraslider.bluetooth.BluetoothServiceCommunicator;
+import fi.peltoset.mikko.cameraslider.eventbus.TestEvent;
 import fi.peltoset.mikko.cameraslider.fragments.BluetoothDeviceSelectionFragment;
 import fi.peltoset.mikko.cameraslider.fragments.ManualModeFragment;
 import fi.peltoset.mikko.cameraslider.fragments.MotorizedMovementFragment;
@@ -27,16 +33,25 @@ import fi.peltoset.mikko.cameraslider.fragments.PanoramaFragment;
 import fi.peltoset.mikko.cameraslider.fragments.SettingsFragment;
 import fi.peltoset.mikko.cameraslider.interfaces.BluetoothDeviceSelectionListener;
 import fi.peltoset.mikko.cameraslider.interfaces.BluetoothServiceListener;
+import fi.peltoset.mikko.cameraslider.interfaces.HasSetListenerMethod;
 import fi.peltoset.mikko.cameraslider.miscellaneous.Constants;
+import fi.peltoset.mikko.cameraslider.miscellaneous.KeyframePOJO;
 
 public class CameraSliderMainActivity extends AppCompatActivity
-    implements NavigationView.OnNavigationItemSelectedListener, BluetoothDeviceSelectionListener {
+    implements NavigationView.OnNavigationItemSelectedListener, BluetoothDeviceSelectionListener,
+    ManualModeFragment.ManualModeListener {
 
   private CameraSliderApplication app;
   private BluetoothServiceCommunicator bluetoothServiceCommunicator = null;
   private DrawerLayout drawer;
   private ProgressDialog progressDialog;
   private String activeFragmentTag = null;
+  private FragmentManager fragmentManager = getSupportFragmentManager();
+
+  // Used to detect if the activity is restarted by the system or by the user. If set to false,
+  // the system has restarted the app (e.g. because of a configuration change). In this case the
+  // app should not try to connect to a Bluetooth device if it didn't succeed last time.
+  private boolean isFirstLaunch = true;
 
   private Class<?>[] fragmentClasses = {
       ManualModeFragment.class,
@@ -61,7 +76,6 @@ public class CameraSliderMainActivity extends AppCompatActivity
     }
 
     app = (CameraSliderApplication) getApplication();
-
     drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
 
     Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -78,76 +92,39 @@ public class CameraSliderMainActivity extends AppCompatActivity
     NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
     navigationView.setNavigationItemSelectedListener(this);
 
-    FragmentManager fragmentManager = getSupportFragmentManager();
-
     if (savedInstanceState == null) {
       activeFragmentTag = ManualModeFragment.class.getName();
-      navigationView.setCheckedItem(R.id.nav_manual);
-      fragmentManager.beginTransaction().add(R.id.content_frame, ManualModeFragment.newInstance(), activeFragmentTag).commit();
-
     } else {
       activeFragmentTag = savedInstanceState.getString("ACTIVE_FRAGMENT", ManualModeFragment.class.getName());
-
-      Fragment visibleFragment = null;
-      if (activeFragmentTag.equals(ManualModeFragment.class.getName())) {
-        visibleFragment = ManualModeFragment.newInstance();
-      } else if (activeFragmentTag.equals(MotorizedMovementFragment.class.getName())) {
-        visibleFragment = MotorizedMovementFragment.newInstance();
-      } else if (activeFragmentTag.equals(PanoramaFragment.class.getName())) {
-        visibleFragment = PanoramaFragment.newInstance();
-      } else if (activeFragmentTag.equals(BluetoothDeviceSelectionFragment.class.getName())) {
-        visibleFragment = BluetoothDeviceSelectionFragment.newInstance();
-      } else if (activeFragmentTag.equals(SettingsFragment.class.getName())) {
-        visibleFragment = SettingsFragment.newInstance();
-      }
-
-      if (visibleFragment != null) {
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-
-        if (fragmentManager.findFragmentByTag(activeFragmentTag) == null) {
-          fragmentTransaction.add(R.id.content_frame, visibleFragment, activeFragmentTag);
-        } else {
-          fragmentTransaction.hide(visibleFragment);
-        }
-      }
+      isFirstLaunch = false;
     }
 
-    bluetoothServiceCommunicator = new BluetoothServiceCommunicator(this, new BluetoothServiceListener() {
-      @Override
-      public void onDeviceConnected(BluetoothDevice device) {
-        CameraSliderApplication app = (CameraSliderApplication) getApplication();
-        app.preferencesEditor.putString(app.PREFERENCES_EXTRA_DEVICE_NAME, device.getName());
-        app.preferencesEditor.putString(app.PREFERENCES_EXTRA_DEVICE_ADDRESS, device.getAddress());
-        app.preferencesEditor.commit();
+    try {
+      Class<?> cls = Class.forName(activeFragmentTag);
+      changeFragment(cls);
 
-        Toast.makeText(getApplicationContext(), "Camera Slider connected", Toast.LENGTH_SHORT).show();
-        hideConnectionProgressDialog();
+      int menuItem = 0;
 
-        Fragment f = getSupportFragmentManager().findFragmentByTag(BluetoothDeviceSelectionFragment.class.getName());
-        if (f != null && f instanceof BluetoothDeviceSelectionFragment) {
-          BluetoothDeviceSelectionFragment bFragment = (BluetoothDeviceSelectionFragment) f;
-          bFragment.deviceConnected();
-        }
+      if (activeFragmentTag.equals(ManualModeFragment.class.getName())) {
+        menuItem = R.id.nav_manual;
+      } else if (activeFragmentTag.equals(MotorizedMovementFragment.class.getName())) {
+        menuItem = R.id.nav_motorized_video;
+      } else if (activeFragmentTag.equals(PanoramaFragment.class.getName())) {
+        menuItem = R.id.nav_panorama;
+      } else if (activeFragmentTag.equals(BluetoothDeviceSelectionFragment.class.getName())) {
+        menuItem = R.id.nav_devices;
+      } else if (activeFragmentTag.equals(SettingsFragment.class.getName())) {
+        menuItem = R.id.nav_settings;
       }
 
-      @Override
-      public void onDeviceDisconnected() {
-        Toast.makeText(getApplicationContext(), "Camera Slider disconnected", Toast.LENGTH_SHORT).show();
-        hideConnectionProgressDialog();
+      if (menuItem != 0) {
+        navigationView.setCheckedItem(menuItem);
       }
+    } catch (ClassNotFoundException e) {
+      e.printStackTrace();
+    }
 
-      @Override
-      public void onDeviceDetectionFailed() {
-        Toast.makeText(getApplicationContext(), "Couldn't connect the device", Toast.LENGTH_SHORT).show();
-        hideConnectionProgressDialog();
-      }
-
-      @Override
-      public void onDeviceConnectionFailed() {
-        Toast.makeText(getApplicationContext(), "Couldn't connect to the device", Toast.LENGTH_SHORT).show();
-        hideConnectionProgressDialog();
-      }
-    });
+    bluetoothServiceCommunicator = new BluetoothServiceCommunicator(this, bluetoothServiceListener);
   }
 
 
@@ -161,6 +138,8 @@ public class CameraSliderMainActivity extends AppCompatActivity
   protected void onStart() {
     super.onStart();
     Log.d(Constants.TAG, "CameraSliderMainActivity.onStart");
+
+    EventBus.getDefault().register(this);
 
     // onStart is called every time the Activity is brought into view. If the BluetoothServiceCommunicator
     // is initialized and the service is not bound then bind it now.
@@ -180,20 +159,22 @@ public class CameraSliderMainActivity extends AppCompatActivity
   protected void onStop() {
     super.onStop();
 
+    EventBus.getDefault().unregister(this);
+
     Log.d(Constants.TAG, "CameraSliderMainActivity.onStop");
 
     // When the Activity is stopped (exits the view), unbind the service to prevent leaks. This would
     // leave the service running in standalone mode in the background but after unbinding we check
     // if there is an active task running (like timelapse or video). If not, terminate the service.
     if (bluetoothServiceCommunicator != null) {
-      Log.d(Constants.TAG, "unbinding");
-      bluetoothServiceCommunicator.unbindService();
-
       if (!bluetoothServiceCommunicator.isActionRunning()) {
         // Disable Bluetooth and get rid of notification
         Log.d(Constants.TAG, "not running, stopping");
         bluetoothServiceCommunicator.stopService();
       }
+
+      Log.d(Constants.TAG, "unbinding");
+      bluetoothServiceCommunicator.unbindService();
     }
   }
 
@@ -216,8 +197,6 @@ public class CameraSliderMainActivity extends AppCompatActivity
    */
   @Override
   public boolean onNavigationItemSelected(MenuItem item) {
-    FragmentManager fragmentManager = getSupportFragmentManager();
-
     // Get the right fragment class based on the selected navigation item
     Class<?> selectedFragmentClass;
     switch (item.getItemId()) {
@@ -240,6 +219,14 @@ public class CameraSliderMainActivity extends AppCompatActivity
         throw new RuntimeException("Unknown fragment");
     }
 
+    changeFragment(selectedFragmentClass);
+
+    drawer.closeDrawer(GravityCompat.START);
+
+    return true;
+  }
+
+  private void changeFragment(Class<?> selectedFragmentClass) {
     // Go through all fragments and hide all others except the selected one. It shouldn't be visible
     // but test anyways for safety.
     for (Class<?> fragmentClass : fragmentClasses) {
@@ -267,10 +254,6 @@ public class CameraSliderMainActivity extends AppCompatActivity
     } else {
       fragmentManager.beginTransaction().show(newFragment).commit();
     }
-
-    drawer.closeDrawer(GravityCompat.START);
-
-    return true;
   }
 
   /**
@@ -291,6 +274,10 @@ public class CameraSliderMainActivity extends AppCompatActivity
   public void reconnect() {
     String deviceAddress = app.preferences.getString(app.PREFERENCES_EXTRA_DEVICE_ADDRESS, null);
     if (deviceAddress != null) {
+      progressDialog = new ProgressDialog(this, R.style.AppCompatAlertDialogStyle);
+      progressDialog.setMessage("Connecting to device...");
+      progressDialog.show();
+
       bluetoothServiceCommunicator.connect(deviceAddress);
     }
   }
@@ -302,5 +289,77 @@ public class CameraSliderMainActivity extends AppCompatActivity
     if (progressDialog != null) {
       progressDialog.hide();
     }
+  }
+
+  private BluetoothServiceListener bluetoothServiceListener = new BluetoothServiceListener() {
+    @Override
+    public void onServiceBound() {
+      Log.d(Constants.TAG, "onServiceBound");
+
+      if (!isFirstLaunch) {
+        return;
+      }
+
+      // If a device is saved, try to connect to it on launch.
+      String deviceAddress = app.preferences.getString(app.PREFERENCES_EXTRA_DEVICE_ADDRESS, null);
+      if (deviceAddress != null && !bluetoothServiceCommunicator.isDeviceConnected()) {
+        bluetoothServiceCommunicator.connect(app.preferences.getString(app.PREFERENCES_EXTRA_DEVICE_ADDRESS, null));
+      }
+    }
+
+    @Override
+    public void onDeviceConnected(BluetoothDevice device) {
+      CameraSliderApplication app = (CameraSliderApplication) getApplication();
+      app.preferencesEditor.putString(app.PREFERENCES_EXTRA_DEVICE_NAME, device.getName());
+      app.preferencesEditor.putString(app.PREFERENCES_EXTRA_DEVICE_ADDRESS, device.getAddress());
+      app.preferencesEditor.commit();
+
+      Toast.makeText(getApplicationContext(), "Camera Slider connected", Toast.LENGTH_SHORT).show();
+      hideConnectionProgressDialog();
+
+      Fragment f = getSupportFragmentManager().findFragmentByTag(BluetoothDeviceSelectionFragment.class.getName());
+      if (f != null && f instanceof BluetoothDeviceSelectionFragment) {
+        BluetoothDeviceSelectionFragment bFragment = (BluetoothDeviceSelectionFragment) f;
+        bFragment.deviceConnected();
+      }
+    }
+
+    @Override
+    public void onDeviceDisconnected() {
+      Toast.makeText(getApplicationContext(), "Camera Slider disconnected", Toast.LENGTH_SHORT).show();
+      hideConnectionProgressDialog();
+    }
+
+    @Override
+    public void onDeviceDetectionFailed() {
+      Toast.makeText(getApplicationContext(), "Couldn't connect the device", Toast.LENGTH_SHORT).show();
+      hideConnectionProgressDialog();
+    }
+
+    @Override
+    public void onDeviceConnectionFailed() {
+      Toast.makeText(getApplicationContext(), "Couldn't connect to the device", Toast.LENGTH_SHORT).show();
+      hideConnectionProgressDialog();
+    }
+  };
+
+  @Override
+  public void setHome(KeyframePOJO home) {
+    Toast.makeText(getApplicationContext(), "set home", Toast.LENGTH_SHORT).show();
+  }
+
+  @Override
+  public void goHome() {
+    Toast.makeText(getApplicationContext(), "go home", Toast.LENGTH_SHORT).show();
+  }
+
+  @Override
+  public void resetHome() {
+    Toast.makeText(getApplicationContext(), "reset home", Toast.LENGTH_SHORT).show();
+  }
+
+  @Subscribe
+  public void onTestEvent(TestEvent event) {
+    Toast.makeText(this, "onTestEvent :D", Toast.LENGTH_SHORT).show();
   }
 }

@@ -14,4 +14,7 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 
+    <string name="notification_not_connected">Not connected</string>
+    <string name="notification_connected">Connected</string>
+    <string name="notification_connection_lost">Connection lost - tap to retry</string>
 </resources>

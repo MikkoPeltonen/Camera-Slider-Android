@@ -32,7 +32,6 @@
             android:theme="@style/AppTheme.NoActionBar"/>
         <activity
             android:name=".activities.RecordingRunningActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize|screenLayout"
             android:label="@string/title_activity_recording_running"
             android:theme="@style/FullscreenTheme"
             android:parentActivityName=".activities.CameraSliderMainActivity">

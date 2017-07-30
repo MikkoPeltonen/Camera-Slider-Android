@@ -1,15 +1,12 @@
 package fi.peltoset.mikko.cameraslider.bluetooth;
 
 import android.bluetooth.BluetoothSocket;
-import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-
-import fi.peltoset.mikko.cameraslider.miscellaneous.Constants;
 
 public class CameraSliderCommunicatorThread extends Thread {
   private BluetoothSocket socket;
@@ -46,6 +43,7 @@ public class CameraSliderCommunicatorThread extends Thread {
     } catch (IOException e) {
       listener.onConnectionFailed();
       e.printStackTrace();
+      cancel();
     }
 
     if (initialLine == null || !initialLine.equals("Hello, Android!")) {
@@ -70,8 +68,8 @@ public class CameraSliderCommunicatorThread extends Thread {
       bufferedWriter.flush();
     } catch (IOException e) {
       listener.onDisconnect();
-      cancel();
       e.printStackTrace();
+      cancel();
     }
   }
 
@@ -86,8 +84,8 @@ public class CameraSliderCommunicatorThread extends Thread {
       }
     } catch (IOException e) {
       listener.onDisconnect();
-      cancel();
       e.printStackTrace();
+      cancel();
     }
   }
 
@@ -101,5 +99,8 @@ public class CameraSliderCommunicatorThread extends Thread {
     } catch (IOException e) {
       e.printStackTrace();
     }
+
+    Thread.currentThread().interrupt();
+
   }
 }

@@ -45,33 +45,6 @@ public class BluetoothServiceCommunicator {
   }
 
   /**
-   * Check whether an activity is bound to the service or not.
-   *
-   * @return
-   */
-  public boolean isServiceBound() {
-    return isServiceBound;
-  }
-
-  /**
-   * Check whether or not a device is connected to the Android app
-   *
-   * @return
-   */
-  public boolean isDeviceConnected() {
-    return isDeviceConnected;
-  }
-
-  /**
-   * Check if a action is running on the device
-   *
-   * @return
-   */
-  public boolean isActionRunning() {
-    return isActionRunning;
-  }
-
-  /**
    * Tell the Bluetooth service to try to connect to the given device.
    *
    * @param deviceAddress
@@ -86,7 +59,7 @@ public class BluetoothServiceCommunicator {
     Message msg = Message.obtain(null, BluetoothService.MESSAGE_CONNECT_TO_DEVICE, 0, 0);
 
     Bundle data = new Bundle();
-    data.putString(BluetoothService.EXTRA_DEVICE_ADDRESS, bluetoothDevice.getAddress());
+    data.putString(BluetoothService.EXTRA_DEVICE_ADDRESS, deviceAddress);
 
     msg.setData(data);
 
@@ -144,6 +117,7 @@ public class BluetoothServiceCommunicator {
     if (isServiceBound) {
       Log.d(Constants.TAG, "bound, unbinding");
       context.unbindService(serviceConnection);
+      isServiceBound = false;
     }
 
     // To prevent leaks, unregister receivers
@@ -163,6 +137,8 @@ public class BluetoothServiceCommunicator {
       } catch (RemoteException e) {
         e.printStackTrace();
       }
+
+      unbindService();
     }
   }
 
@@ -173,11 +149,7 @@ public class BluetoothServiceCommunicator {
       serviceMessenger = new Messenger(service);
       isServiceBound = true;
 
-      // If a device is saved, try to connect to it on launch.
-      String deviceAddress = app.preferences.getString(app.PREFERENCES_EXTRA_DEVICE_ADDRESS, null);
-      if (deviceAddress != null && !isDeviceConnected) {
-        connect(app.preferences.getString(app.PREFERENCES_EXTRA_DEVICE_ADDRESS, null));
-      }
+      listener.onServiceBound();
     }
 
     @Override
@@ -186,23 +158,6 @@ public class BluetoothServiceCommunicator {
       serviceMessenger = null;
     }
   };
-
-  /**
-   * Check whether a service is already running or not
-   *
-   * @param serviceClass
-   * @return
-   */
-  private boolean isServiceRunning(Class<?> serviceClass) {
-    ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-    for (ActivityManager.RunningServiceInfo service : activityManager.getRunningServices(Integer.MAX_VALUE)) {
-      if (serviceClass.getName().equals(service.service.getClassName())) {
-        return true;
-      }
-    }
-
-    return false;
-  }
 
   // Handle messages received from the Bluetooth service
   private BroadcastReceiver bluetoothServiceBroadcastReceiver = new BroadcastReceiver() {
@@ -230,4 +185,49 @@ public class BluetoothServiceCommunicator {
       }
     }
   };
+
+
+  /**
+   * Check whether a service is already running or not
+   *
+   * @param serviceClass
+   * @return
+   */
+  private boolean isServiceRunning(Class<?> serviceClass) {
+    ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+    for (ActivityManager.RunningServiceInfo service : activityManager.getRunningServices(Integer.MAX_VALUE)) {
+      if (serviceClass.getName().equals(service.service.getClassName())) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Check whether an activity is bound to the service or not.
+   *
+   * @return
+   */
+  public boolean isServiceBound() {
+    return isServiceBound;
+  }
+
+  /**
+   * Check whether or not a device is connected to the Android app
+   *
+   * @return
+   */
+  public boolean isDeviceConnected() {
+    return isDeviceConnected;
+  }
+
+  /**
+   * Check if a action is running on the device
+   *
+   * @return
+   */
+  public boolean isActionRunning() {
+    return isActionRunning;
+  }
 }

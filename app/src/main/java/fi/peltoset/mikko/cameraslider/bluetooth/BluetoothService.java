@@ -21,6 +21,7 @@ import android.widget.Toast;
 import java.util.HashMap;
 import java.util.Map;
 
+import fi.peltoset.mikko.cameraslider.R;
 import fi.peltoset.mikko.cameraslider.interfaces.NotificationCommunicatorListener;
 import fi.peltoset.mikko.cameraslider.miscellaneous.Constants;
 import fi.peltoset.mikko.cameraslider.notifications.NotificationCommunicator;
@@ -100,9 +101,10 @@ public class BluetoothService extends Service {
       }
     });
 
-    // To keep the service running indefinitely we must start a sticky notification
-    notificationCommunicator.displayInfoNotification("Camera Slider", "Not connected");
+    // To keep the service running indefinitely we must start a sticky foreground notification
+    notificationCommunicator.displayInfoNotification(R.string.notification_not_connected);
 
+    // BroadcastReceiver for receiving actions from notifications
     IntentFilter intentFilter = new IntentFilter();
     intentFilter.addAction(NotificationCommunicator.INTENT_RECONNECT);
     registerReceiver(notificationBroadcastReceiver, intentFilter);
@@ -163,6 +165,8 @@ public class BluetoothService extends Service {
    * Cancel all notifications and stop the background service
    */
   private void stopAndCancelNotification() {
+    Log.d(Constants.TAG, "shutting down!");
+    stopForeground(true);
     notificationCommunicator.cancel();
 
     if (cameraSlider != null) {
@@ -193,7 +197,11 @@ public class BluetoothService extends Service {
     }
 
     if (message.startsWith("STATUS:")) {
+      // Received a status update from the Camera Slider
       Log.d(Constants.TAG, "status: " + message);
+    } else if (message.startsWith("HOME:")) {
+      // Received a home location
+      Log.d(Constants.TAG, "home: " + message);
     }
   }
 
@@ -233,7 +241,7 @@ public class BluetoothService extends Service {
     public void onConnect(String deviceAddress) {
       Log.i(Constants.TAG, "device connected");
 
-      notificationCommunicator.displayInfoNotification("Camera Slider", "Connected");
+      notificationCommunicator.displayInfoNotification(R.string.notification_connected);
       localBroadcastManager.sendBroadcast(new Intent(INTENT_DEVICE_CONNECTED));
 
       isDeviceConnected = true;
@@ -258,15 +266,17 @@ public class BluetoothService extends Service {
     // Called when connecting to a device failed
     @Override
     public void onConnectionFailed() {
-      notificationCommunicator.displayInfoNotification("Camera Slider", "Not connected");
+      isDeviceConnected = false;
+      notificationCommunicator.displayInfoNotification(R.string.notification_not_connected);
       localBroadcastManager.sendBroadcast(new Intent(INTENT_DEVICE_CONNECTION_FAILED));
     }
 
     // Called when the connection was successful but the device was not detected as a Camera Slider
     @Override
     public void onDeviceDetectionFail() {
+      isDeviceConnected = false;
       Log.i(Constants.TAG, "detection failed");
-      notificationCommunicator.displayInfoNotification("Camera Slider", "Not connected");
+      notificationCommunicator.displayInfoNotification(R.string.notification_not_connected);
       localBroadcastManager.sendBroadcast(new Intent(INTENT_DEVICE_DETECTION_FAILED));
     }
 
