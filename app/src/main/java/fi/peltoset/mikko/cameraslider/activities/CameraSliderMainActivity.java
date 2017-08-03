@@ -139,7 +139,7 @@ public class CameraSliderMainActivity extends AppCompatActivity
     super.onStart();
     Log.d(Constants.TAG, "CameraSliderMainActivity.onStart");
 
-    EventBus.getDefault().register(this);
+//    EventBus.getDefault().register(this);
 
     // onStart is called every time the Activity is brought into view. If the BluetoothServiceCommunicator
     // is initialized and the service is not bound then bind it now.
@@ -159,7 +159,7 @@ public class CameraSliderMainActivity extends AppCompatActivity
   protected void onStop() {
     super.onStop();
 
-    EventBus.getDefault().unregister(this);
+//    EventBus.getDefault().unregister(this);
 
     Log.d(Constants.TAG, "CameraSliderMainActivity.onStop");
 
@@ -343,6 +343,12 @@ public class CameraSliderMainActivity extends AppCompatActivity
     }
   };
 
+
+
+  /**********************************
+   * Manual Mode Fragment interface *
+   **********************************/
+
   @Override
   public void setHome(KeyframePOJO home) {
     Toast.makeText(getApplicationContext(), "set home", Toast.LENGTH_SHORT).show();
@@ -356,10 +362,5 @@ public class CameraSliderMainActivity extends AppCompatActivity
   @Override
   public void resetHome() {
     Toast.makeText(getApplicationContext(), "reset home", Toast.LENGTH_SHORT).show();
-  }
-
-  @Subscribe
-  public void onTestEvent(TestEvent event) {
-    Toast.makeText(this, "onTestEvent :D", Toast.LENGTH_SHORT).show();
   }
 }

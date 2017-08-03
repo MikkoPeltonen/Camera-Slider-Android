@@ -14,10 +14,12 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.greenrobot.eventbus.EventBus;
 
 import fi.peltoset.mikko.cameraslider.IncreaseDecreaseHandler;
+import fi.peltoset.mikko.cameraslider.ManualModeIncreaseDecreaseHandler;
 import fi.peltoset.mikko.cameraslider.R;
 import fi.peltoset.mikko.cameraslider.eventbus.TestEvent;
 import fi.peltoset.mikko.cameraslider.interfaces.IncreaseDecreaseListener;
@@ -51,7 +53,7 @@ public class ManualModeFragment extends Fragment {
     void setHome(KeyframePOJO home);
     void goHome();
     void resetHome();
-  };
+  }
 
   public ManualModeFragment() {}
 
@@ -68,8 +70,7 @@ public class ManualModeFragment extends Fragment {
     if (context instanceof ManualModeListener) {
       listener = (ManualModeListener) context;
     } else {
-      throw new RuntimeException(context.toString()
-          + " must implement ManualModeListener");
+      throw new RuntimeException(context.toString() + " must implement ManualModeListener");
     }
   }
 
@@ -206,7 +207,17 @@ public class ManualModeFragment extends Fragment {
       }
     });
 
-    new IncreaseDecreaseHandler(slideRight, slideLeft, new IncreaseDecreaseListener() {
+    new ManualModeIncreaseDecreaseHandler(slideRight, slideLeft, new ManualModeIncreaseDecreaseHandler.ManualModeIncreaseDecreaseListener() {
+      @Override
+      public void onIncreaseButtonStateChange(boolean pressed) {
+        Toast.makeText(getContext(), "increase " + pressed, Toast.LENGTH_SHORT).show();
+      }
+
+      @Override
+      public void onDecreaseButtonStateChange(boolean pressed) {
+        Toast.makeText(getContext(), "decrease " + pressed, Toast.LENGTH_SHORT).show();
+      }
+
       @Override
       public void onIncrease() {
         currentPosition.setSlideLength(currentPosition.getSlideLength() + 1);

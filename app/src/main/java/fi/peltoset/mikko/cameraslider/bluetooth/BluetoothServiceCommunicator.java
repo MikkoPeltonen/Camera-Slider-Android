@@ -70,6 +70,13 @@ public class BluetoothServiceCommunicator {
     }
   }
 
+  public void move() {
+
+  }
+
+
+
+
   /**
    * Start the Bluetooth service
    */
