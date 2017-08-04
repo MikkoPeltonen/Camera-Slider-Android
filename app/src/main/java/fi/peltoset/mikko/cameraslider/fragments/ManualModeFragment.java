@@ -14,16 +14,16 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import org.greenrobot.eventbus.EventBus;
 
 import fi.peltoset.mikko.cameraslider.IncreaseDecreaseHandler;
-import fi.peltoset.mikko.cameraslider.ManualModeIncreaseDecreaseHandler;
+import fi.peltoset.mikko.cameraslider.IncreaseDecreaseHandlerStub;
 import fi.peltoset.mikko.cameraslider.R;
 import fi.peltoset.mikko.cameraslider.eventbus.TestEvent;
-import fi.peltoset.mikko.cameraslider.interfaces.IncreaseDecreaseListener;
 import fi.peltoset.mikko.cameraslider.miscellaneous.KeyframePOJO;
+import fi.peltoset.mikko.cameraslider.miscellaneous.Motor;
+import fi.peltoset.mikko.cameraslider.miscellaneous.RotationDirection;
 
 
 public class ManualModeFragment extends Fragment {
@@ -53,6 +53,8 @@ public class ManualModeFragment extends Fragment {
     void setHome(KeyframePOJO home);
     void goHome();
     void resetHome();
+    void move(Motor motor, RotationDirection rotationDirection);
+    void step(Motor motor, RotationDirection rotationDirection);
   }
 
   public ManualModeFragment() {}
@@ -207,15 +209,60 @@ public class ManualModeFragment extends Fragment {
       }
     });
 
-    new ManualModeIncreaseDecreaseHandler(slideRight, slideLeft, new ManualModeIncreaseDecreaseHandler.ManualModeIncreaseDecreaseListener() {
+//    new ManualModeIncreaseDecreaseHandler(slideRight, slideLeft, new ManualModeIncreaseDecreaseHandler.ManualModeIncreaseDecreaseListener() {
+//      @Override
+//      public void onIncreaseButtonStateChange(boolean pressed) {
+//        if (pressed) {
+//          listener.move(Motor.PAN, RotationDirection.CW);
+//        } else {
+//          listener.move(Motor.PAN, RotationDirection.STOP);
+//        }
+//      }
+//
+//      @Override
+//      public void onDecreaseButtonStateChange(boolean pressed) {
+//        if (pressed) {
+//          listener.move(Motor.PAN, RotationDirection.CCW);
+//        } else {
+//          listener.move(Motor.PAN, RotationDirection.STOP);
+//        }
+//      }
+//
+//      @Override
+//      public void onIncrease() {
+//        currentPosition.setSlideLength(currentPosition.getSlideLength() + 1);
+//        updateTextViews();
+//      }
+//
+//      @Override
+//      public void onDecrease() {
+//        currentPosition.setSlideLength(currentPosition.getSlideLength() - 1);
+//        updateTextViews();
+//      }
+//    });
+
+    new IncreaseDecreaseHandler(slideRight, slideLeft, new IncreaseDecreaseHandlerStub() {
       @Override
       public void onIncreaseButtonStateChange(boolean pressed) {
-        Toast.makeText(getContext(), "increase " + pressed, Toast.LENGTH_SHORT).show();
+        if (pressed) {
+          listener.move(Motor.SLIDE, RotationDirection.CW);
+        } else {
+          listener.move(Motor.SLIDE, RotationDirection.STOP);
+        }
       }
 
       @Override
       public void onDecreaseButtonStateChange(boolean pressed) {
-        Toast.makeText(getContext(), "decrease " + pressed, Toast.LENGTH_SHORT).show();
+        if (pressed) {
+          listener.move(Motor.SLIDE, RotationDirection.CCW);
+        } else {
+          listener.move(Motor.SLIDE, RotationDirection.STOP);
+        }
+      }
+
+      @Override
+      public void step(RotationDirection rotationDirection) {
+        listener.step(Motor.SLIDE, rotationDirection);
       }
 
       @Override
@@ -231,7 +278,7 @@ public class ManualModeFragment extends Fragment {
       }
     });
 
-    new IncreaseDecreaseHandler(panCW, panCCW, new IncreaseDecreaseListener() {
+    new IncreaseDecreaseHandler(panCW, panCCW, new IncreaseDecreaseHandlerStub() {
       @Override
       public void onIncrease() {
         currentPosition.setPanAngle(currentPosition.getPanAngle() + 10);
@@ -245,7 +292,7 @@ public class ManualModeFragment extends Fragment {
       }
     });
 
-    new IncreaseDecreaseHandler(tiltCW, tiltCCW, new IncreaseDecreaseListener() {
+    new IncreaseDecreaseHandler(tiltCW, tiltCCW, new IncreaseDecreaseHandlerStub() {
       @Override
       public void onIncrease() {
         currentPosition.setTiltAngle(currentPosition.getTiltAngle() + 10);
@@ -259,7 +306,7 @@ public class ManualModeFragment extends Fragment {
       }
     });
 
-    new IncreaseDecreaseHandler(zoomCW, zoomCCW, new IncreaseDecreaseListener() {
+    new IncreaseDecreaseHandler(zoomCW, zoomCCW, new IncreaseDecreaseHandlerStub() {
       @Override
       public void onIncrease() {
         currentPosition.setZoom(currentPosition.getZoom() + 10);
@@ -273,7 +320,7 @@ public class ManualModeFragment extends Fragment {
       }
     });
 
-    new IncreaseDecreaseHandler(focusCW, focusCCW, new IncreaseDecreaseListener() {
+    new IncreaseDecreaseHandler(focusCW, focusCCW, new IncreaseDecreaseHandlerStub() {
       @Override
       public void onIncrease() {
         currentPosition.setFocus(currentPosition.getFocus() + 10);

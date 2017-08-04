@@ -21,6 +21,8 @@ import android.util.Log;
 import fi.peltoset.mikko.cameraslider.CameraSliderApplication;
 import fi.peltoset.mikko.cameraslider.interfaces.BluetoothServiceListener;
 import fi.peltoset.mikko.cameraslider.miscellaneous.Constants;
+import fi.peltoset.mikko.cameraslider.miscellaneous.Motor;
+import fi.peltoset.mikko.cameraslider.miscellaneous.RotationDirection;
 
 public class BluetoothServiceCommunicator {
   private BluetoothServiceListener listener;
@@ -70,8 +72,30 @@ public class BluetoothServiceCommunicator {
     }
   }
 
-  public void move() {
+  public void move(Motor motor, RotationDirection rotationDirection) {
+    try {
+      Message msg = Message.obtain(null, BluetoothService.MESSAGE_MOVE, 0, 0);
+      Bundle data = new Bundle();
+      data.putSerializable("motor", motor);
+      data.putSerializable("rotationdirection", rotationDirection);
+      msg.setData(data);
+      serviceMessenger.send(msg);
+    } catch (RemoteException e) {
+      e.printStackTrace();
+    }
+  }
 
+  public void step(Motor motor, RotationDirection rotationDirection) {
+    try {
+      Message msg = Message.obtain(null, BluetoothService.MESSAGE_STEP, 0, 0);
+      Bundle data = new Bundle();
+      data.putSerializable("motor", motor);
+      data.putSerializable("rotationdirection", rotationDirection);
+      msg.setData(data);
+      serviceMessenger.send(msg);
+    } catch (RemoteException e) {
+      e.printStackTrace();
+    }
   }
 
 

@@ -5,6 +5,7 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import fi.peltoset.mikko.cameraslider.interfaces.IncreaseDecreaseListener;
+import fi.peltoset.mikko.cameraslider.miscellaneous.RotationDirection;
 
 public class IncreaseDecreaseHandler {
 
@@ -13,9 +14,7 @@ public class IncreaseDecreaseHandler {
 
   private Handler handler = new Handler();
 
-  private View.OnClickListener onClickListener;
-  private View.OnLongClickListener onLongClickListener;
-  private View.OnTouchListener onTouchListener;
+  private RepeatRunnable repeatRunnable = new RepeatRunnable();
 
   private enum State {
     INCREASE, DECREASE, NONE
@@ -26,59 +25,68 @@ public class IncreaseDecreaseHandler {
   // When long pressed this defines how often a increase/decrease action is fired
   private static final int DELAY = 25;
 
+  private boolean isLongPress = false;
 
-  public IncreaseDecreaseHandler(View increaseButton, View decreaseButton, IncreaseDecreaseListener listener) {
-    this.listener = listener;
+  private Runnable detectLongPress = new Runnable() {
+    @Override
+    public void run() {
+      if (currentState == State.INCREASE) {
+        IncreaseDecreaseHandler.this.listener.onIncreaseButtonStateChange(true);
+      } else if (currentState == State.DECREASE) {
+        IncreaseDecreaseHandler.this.listener.onDecreaseButtonStateChange(true);
+      }
+
+      isLongPress = true;
+
+      handler.post(new RepeatRunnable());
+    }
+  };
+
+  public IncreaseDecreaseHandler(View increaseButton, View decreaseButton, IncreaseDecreaseListener increaseDecreaseListener) {
+    this.listener = increaseDecreaseListener;
     this.increaseButton = increaseButton;
     this.decreaseButton = decreaseButton;
 
-    // Handle single increase and decrease button clicks
-    onClickListener = new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        if (v.getId() == IncreaseDecreaseHandler.this.increaseButton.getId()) {
-          IncreaseDecreaseHandler.this.listener.onIncrease();
-        } else if (v.getId() == IncreaseDecreaseHandler.this.decreaseButton.getId()) {
-          IncreaseDecreaseHandler.this.listener.onDecrease();
-        }
-      }
-    };
-
-    // Handle long clicks by posting the Handler with the RepeatRunnable
-    onLongClickListener = new View.OnLongClickListener() {
-      @Override
-      public boolean onLongClick(View v) {
-        if (v.getId() == IncreaseDecreaseHandler.this.increaseButton.getId()) {
-          currentState = State.INCREASE;
-        } else if (v.getId() == IncreaseDecreaseHandler.this.decreaseButton.getId()) {
-          currentState = State.DECREASE;
-        }
-
-        handler.post(new RepeatRunnable());
-
-        return false;
-      }
-    };
-
-    // When either of the buttons is released, set current state to none
-    onTouchListener = new View.OnTouchListener() {
+    View.OnTouchListener onTouchListener = new View.OnTouchListener() {
       @Override
       public boolean onTouch(View v, MotionEvent event) {
-        if ((event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_CANCEL)) {
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+          // Button pressed
+
+          if (v.getId() == IncreaseDecreaseHandler.this.increaseButton.getId()) {
+            currentState = State.INCREASE;
+            listener.step(RotationDirection.CW);
+            listener.onIncrease();
+          } else if (v.getId() == IncreaseDecreaseHandler.this.decreaseButton.getId()) {
+            currentState = State.DECREASE;
+            listener.step(RotationDirection.CCW);
+            listener.onDecrease();
+          }
+
+          handler.postDelayed(detectLongPress, 500);
+        } else if (event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_CANCEL) {
+          // Button released
+
+          handler.removeCallbacks(detectLongPress);
+
+          if (isLongPress) {
+            if (currentState == State.INCREASE) {
+              IncreaseDecreaseHandler.this.listener.onIncreaseButtonStateChange(false);
+            } else if (currentState == State.DECREASE) {
+              IncreaseDecreaseHandler.this.listener.onDecreaseButtonStateChange(false);
+            }
+          }
+
+          isLongPress = false;
           currentState = State.NONE;
         }
 
-        return false;
+        return true;
       }
     };
 
-    this.increaseButton.setOnClickListener(onClickListener);
-    this.increaseButton.setOnLongClickListener(onLongClickListener);
-    this.increaseButton.setOnTouchListener(onTouchListener);
-
-    this.decreaseButton.setOnClickListener(onClickListener);
-    this.decreaseButton.setOnLongClickListener(onLongClickListener);
-    this.decreaseButton.setOnTouchListener(onTouchListener);
+    increaseButton.setOnTouchListener(onTouchListener);
+    decreaseButton.setOnTouchListener(onTouchListener);
   }
 
   private class RepeatRunnable implements Runnable {

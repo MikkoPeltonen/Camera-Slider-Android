@@ -15,6 +15,7 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;
 
 import fi.peltoset.mikko.cameraslider.IncreaseDecreaseHandler;
+import fi.peltoset.mikko.cameraslider.IncreaseDecreaseHandlerStub;
 import fi.peltoset.mikko.cameraslider.R;
 import fi.peltoset.mikko.cameraslider.interfaces.IncreaseDecreaseListener;
 import fi.peltoset.mikko.cameraslider.interfaces.ValuePickerDialogInterface;
@@ -156,7 +157,7 @@ public class ValuePickerDialog extends DialogFragment {
       }
     });
 
-    new IncreaseDecreaseHandler(increaseButton, decreaseButton, new IncreaseDecreaseListener() {
+    new IncreaseDecreaseHandler(increaseButton, decreaseButton, new IncreaseDecreaseHandlerStub() {
       @Override
       public void onIncrease() {
         if (value + stepSize > maximumValue) {

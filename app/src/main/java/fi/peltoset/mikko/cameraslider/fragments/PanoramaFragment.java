@@ -11,6 +11,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import fi.peltoset.mikko.cameraslider.IncreaseDecreaseHandler;
+import fi.peltoset.mikko.cameraslider.IncreaseDecreaseHandlerStub;
 import fi.peltoset.mikko.cameraslider.R;
 import fi.peltoset.mikko.cameraslider.interfaces.IncreaseDecreaseListener;
 import fi.peltoset.mikko.cameraslider.miscellaneous.Helpers;
@@ -69,7 +70,7 @@ public class PanoramaFragment extends Fragment {
     decreaseFocalLength = (ImageButton) view.findViewById(R.id.decreaseFocalLength);
     increaseFocalLength = (ImageButton) view.findViewById(R.id.increaseFocalLength);
 
-    new IncreaseDecreaseHandler(increaseHorizontalShift, decreaseHorizontalShift, new IncreaseDecreaseListener() {
+    new IncreaseDecreaseHandler(increaseHorizontalShift, decreaseHorizontalShift, new IncreaseDecreaseHandlerStub() {
       @Override
       public void onIncrease() {
         horizontalShift += 10;
@@ -83,7 +84,7 @@ public class PanoramaFragment extends Fragment {
       }
     });
 
-    new IncreaseDecreaseHandler(increaseVerticalShift, decreaseVerticalShift, new IncreaseDecreaseListener() {
+    new IncreaseDecreaseHandler(increaseVerticalShift, decreaseVerticalShift, new IncreaseDecreaseHandlerStub() {
       @Override
       public void onIncrease() {
         verticalShift += 10;
@@ -97,7 +98,7 @@ public class PanoramaFragment extends Fragment {
       }
     });
 
-    new IncreaseDecreaseHandler(increaseOverlapPercentage, decreaseOverlapPercentage, new IncreaseDecreaseListener() {
+    new IncreaseDecreaseHandler(increaseOverlapPercentage, decreaseOverlapPercentage, new IncreaseDecreaseHandlerStub() {
       @Override
       public void onIncrease() {
         if (overlapPercentage >= 99) {
@@ -119,7 +120,7 @@ public class PanoramaFragment extends Fragment {
       }
     });
 
-    new IncreaseDecreaseHandler(increaseFocalLength, decreaseFocalLength, new IncreaseDecreaseListener() {
+    new IncreaseDecreaseHandler(increaseFocalLength, decreaseFocalLength, new IncreaseDecreaseHandlerStub() {
       @Override
       public void onIncrease() {
         focalLength += 1;

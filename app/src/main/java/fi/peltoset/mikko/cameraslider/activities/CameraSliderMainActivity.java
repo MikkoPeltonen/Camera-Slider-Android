@@ -36,6 +36,8 @@ import fi.peltoset.mikko.cameraslider.interfaces.BluetoothServiceListener;
 import fi.peltoset.mikko.cameraslider.interfaces.HasSetListenerMethod;
 import fi.peltoset.mikko.cameraslider.miscellaneous.Constants;
 import fi.peltoset.mikko.cameraslider.miscellaneous.KeyframePOJO;
+import fi.peltoset.mikko.cameraslider.miscellaneous.Motor;
+import fi.peltoset.mikko.cameraslider.miscellaneous.RotationDirection;
 
 public class CameraSliderMainActivity extends AppCompatActivity
     implements NavigationView.OnNavigationItemSelectedListener, BluetoothDeviceSelectionListener,
@@ -362,5 +364,15 @@ public class CameraSliderMainActivity extends AppCompatActivity
   @Override
   public void resetHome() {
     Toast.makeText(getApplicationContext(), "reset home", Toast.LENGTH_SHORT).show();
+  }
+
+  @Override
+  public void move(Motor motor, RotationDirection rotationDirection) {
+    bluetoothServiceCommunicator.move(motor, rotationDirection);
+  }
+
+  @Override
+  public void step(Motor motor, RotationDirection rotationDirection) {
+    bluetoothServiceCommunicator.step(motor, rotationDirection);
   }
 }

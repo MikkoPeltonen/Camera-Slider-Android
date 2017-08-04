@@ -16,6 +16,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import fi.peltoset.mikko.cameraslider.IncreaseDecreaseHandler;
+import fi.peltoset.mikko.cameraslider.IncreaseDecreaseHandlerStub;
 import fi.peltoset.mikko.cameraslider.miscellaneous.KeyframePOJO;
 import fi.peltoset.mikko.cameraslider.R;
 import fi.peltoset.mikko.cameraslider.dialogs.ValuePickerDialog;
@@ -122,7 +123,7 @@ public class KeyframeEditActivity extends AppCompatActivity implements ValuePick
       }
     });
 
-    new IncreaseDecreaseHandler(slideRight, slideLeft, new IncreaseDecreaseListener() {
+    new IncreaseDecreaseHandler(slideRight, slideLeft, new IncreaseDecreaseHandlerStub() {
       @Override
       public void onIncrease() {
         keyframe.setSlideLength(keyframe.getSlideLength() + 1);
@@ -136,7 +137,7 @@ public class KeyframeEditActivity extends AppCompatActivity implements ValuePick
       }
     });
 
-    new IncreaseDecreaseHandler(panCW, panCCW, new IncreaseDecreaseListener() {
+    new IncreaseDecreaseHandler(panCW, panCCW, new IncreaseDecreaseHandlerStub() {
       @Override
       public void onIncrease() {
         keyframe.setPanAngle(keyframe.getPanAngle() + 10);
@@ -150,7 +151,7 @@ public class KeyframeEditActivity extends AppCompatActivity implements ValuePick
       }
     });
 
-    new IncreaseDecreaseHandler(tiltCW, tiltCCW, new IncreaseDecreaseListener() {
+    new IncreaseDecreaseHandler(tiltCW, tiltCCW, new IncreaseDecreaseHandlerStub() {
       @Override
       public void onIncrease() {
         keyframe.setTiltAngle(keyframe.getTiltAngle() + 10);
@@ -164,7 +165,7 @@ public class KeyframeEditActivity extends AppCompatActivity implements ValuePick
       }
     });
 
-    new IncreaseDecreaseHandler(zoomCW, zoomCCW, new IncreaseDecreaseListener() {
+    new IncreaseDecreaseHandler(zoomCW, zoomCCW, new IncreaseDecreaseHandlerStub() {
       @Override
       public void onIncrease() {
         keyframe.setZoom(keyframe.getZoom() + 10);
@@ -178,7 +179,7 @@ public class KeyframeEditActivity extends AppCompatActivity implements ValuePick
       }
     });
 
-    new IncreaseDecreaseHandler(focusCW, focusCCW, new IncreaseDecreaseListener() {
+    new IncreaseDecreaseHandler(focusCW, focusCCW, new IncreaseDecreaseHandlerStub() {
       @Override
       public void onIncrease() {
         keyframe.setFocus(keyframe.getFocus() + 10);

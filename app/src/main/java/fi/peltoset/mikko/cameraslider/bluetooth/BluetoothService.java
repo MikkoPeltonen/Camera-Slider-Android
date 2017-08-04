@@ -24,12 +24,16 @@ import java.util.Map;
 import fi.peltoset.mikko.cameraslider.R;
 import fi.peltoset.mikko.cameraslider.interfaces.NotificationCommunicatorListener;
 import fi.peltoset.mikko.cameraslider.miscellaneous.Constants;
+import fi.peltoset.mikko.cameraslider.miscellaneous.Motor;
+import fi.peltoset.mikko.cameraslider.miscellaneous.RotationDirection;
 import fi.peltoset.mikko.cameraslider.notifications.NotificationCommunicator;
 
 public class BluetoothService extends Service {
   public static final int MESSAGE_CONNECT_TO_DEVICE = 1;
   public static final int MESSAGE_STOP = 2;
   public static final int MESSAGE_START_ACTION = 3;
+  public static final int MESSAGE_STEP = 4;
+  public static final int MESSAGE_MOVE = 5;
 
   // Broadcast intent codes
   public static final String INTENT_SERVICE_STARTED = "INTENT_SERVICE_STARTED";
@@ -73,6 +77,12 @@ public class BluetoothService extends Service {
           break;
         case MESSAGE_START_ACTION:
           startAction(msg.getData());
+          break;
+        case MESSAGE_STEP:
+          step(msg.getData());
+          break;
+        case MESSAGE_MOVE:
+          move(msg.getData());
           break;
         default:
           super.handleMessage(msg);
@@ -159,6 +169,20 @@ public class BluetoothService extends Service {
     }
 
     cameraSlider.write("END_TRANSACTION");
+  }
+
+  private void move(Bundle data) {
+    Motor motor = (Motor) data.getSerializable("motor");
+    RotationDirection rotationDirection = (RotationDirection) data.getSerializable("rotationdirection");
+
+    cameraSlider.write("MOTOR:" + motor.toString() + ";DIR:" + rotationDirection.toString());
+  }
+
+  private void step(Bundle data) {
+    Motor motor = (Motor) data.getSerializable("motor");
+    RotationDirection rotationDirection = (RotationDirection) data.getSerializable("rotationdirection");
+
+    cameraSlider.write("STEP:" + motor.toString() + ";DIR:" + rotationDirection.toString());
   }
 
   /**
