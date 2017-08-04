@@ -55,12 +55,8 @@ public class IncreaseDecreaseHandler {
 
           if (v.getId() == IncreaseDecreaseHandler.this.increaseButton.getId()) {
             currentState = State.INCREASE;
-            listener.step(RotationDirection.CW);
-            listener.onIncrease();
           } else if (v.getId() == IncreaseDecreaseHandler.this.decreaseButton.getId()) {
             currentState = State.DECREASE;
-            listener.step(RotationDirection.CCW);
-            listener.onDecrease();
           }
 
           handler.postDelayed(detectLongPress, 500);
@@ -74,6 +70,14 @@ public class IncreaseDecreaseHandler {
               IncreaseDecreaseHandler.this.listener.onIncreaseButtonStateChange(false);
             } else if (currentState == State.DECREASE) {
               IncreaseDecreaseHandler.this.listener.onDecreaseButtonStateChange(false);
+            }
+          } else {
+            if (v.getId() == IncreaseDecreaseHandler.this.increaseButton.getId()) {
+              listener.step(RotationDirection.CW);
+              listener.onIncrease();
+            } else if (v.getId() == IncreaseDecreaseHandler.this.decreaseButton.getId()) {
+              listener.step(RotationDirection.CCW);
+              listener.onDecrease();
             }
           }
 
