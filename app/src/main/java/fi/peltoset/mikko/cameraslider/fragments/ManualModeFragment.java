@@ -13,14 +13,18 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import fi.peltoset.mikko.cameraslider.IncreaseDecreaseHandler;
 import fi.peltoset.mikko.cameraslider.IncreaseDecreaseHandlerStub;
 import fi.peltoset.mikko.cameraslider.R;
-import fi.peltoset.mikko.cameraslider.eventbus.TestEvent;
+import fi.peltoset.mikko.cameraslider.eventbus.CameraSliderConnectedEvent;
+import fi.peltoset.mikko.cameraslider.eventbus.CameraSliderDisconnectedEvent;
 import fi.peltoset.mikko.cameraslider.miscellaneous.KeyframePOJO;
 import fi.peltoset.mikko.cameraslider.miscellaneous.Motor;
 import fi.peltoset.mikko.cameraslider.miscellaneous.RotationDirection;
@@ -47,7 +51,10 @@ public class ManualModeFragment extends Fragment {
   private Button setHomeButton;
   private Button resetHomeButton;
 
+  private LinearLayout controlsOverlay;
+
   private ManualModeListener listener;
+  private EventBus eventBus;
 
   public interface ManualModeListener {
     void setHome(KeyframePOJO home);
@@ -85,6 +92,15 @@ public class ManualModeFragment extends Fragment {
     if (savedInstanceState != null) {
       currentPosition = savedInstanceState.getParcelable("currentPosition");
     }
+
+    eventBus = EventBus.getDefault();
+    eventBus.register(this);
+  }
+
+  @Override
+  public void onDestroy() {
+    super.onDestroy();
+    eventBus.unregister(this);
   }
 
   @Override
@@ -123,6 +139,8 @@ public class ManualModeFragment extends Fragment {
     goHomeButton = (Button) view.findViewById(R.id.goHomeButton);
     setHomeButton = (Button) view.findViewById(R.id.setHomeButton);
     resetHomeButton = (Button) view.findViewById(R.id.resetHomeButton);
+
+    controlsOverlay = (LinearLayout) view.findViewById(R.id.controlsOverlay);
 
     // Discard the current position and move to the last set home position
     goHomeButton.setOnClickListener(new View.OnClickListener() {
@@ -165,7 +183,6 @@ public class ManualModeFragment extends Fragment {
         currentPosition = new KeyframePOJO();
 
 //        listener.setHome(homePosition);
-        EventBus.getDefault().post(new TestEvent());
 
         updateTextViews();
       }
@@ -208,38 +225,6 @@ public class ManualModeFragment extends Fragment {
         alertDialogBuilder.create().show();
       }
     });
-
-//    new ManualModeIncreaseDecreaseHandler(slideRight, slideLeft, new ManualModeIncreaseDecreaseHandler.ManualModeIncreaseDecreaseListener() {
-//      @Override
-//      public void onIncreaseButtonStateChange(boolean pressed) {
-//        if (pressed) {
-//          listener.move(Motor.PAN, RotationDirection.CW);
-//        } else {
-//          listener.move(Motor.PAN, RotationDirection.STOP);
-//        }
-//      }
-//
-//      @Override
-//      public void onDecreaseButtonStateChange(boolean pressed) {
-//        if (pressed) {
-//          listener.move(Motor.PAN, RotationDirection.CCW);
-//        } else {
-//          listener.move(Motor.PAN, RotationDirection.STOP);
-//        }
-//      }
-//
-//      @Override
-//      public void onIncrease() {
-//        currentPosition.setSlideLength(currentPosition.getSlideLength() + 1);
-//        updateTextViews();
-//      }
-//
-//      @Override
-//      public void onDecrease() {
-//        currentPosition.setSlideLength(currentPosition.getSlideLength() - 1);
-//        updateTextViews();
-//      }
-//    });
 
     new IncreaseDecreaseHandler(slideRight, slideLeft, new IncreaseDecreaseHandlerStub() {
       @Override
@@ -345,5 +330,18 @@ public class ManualModeFragment extends Fragment {
     this.tiltAngleTextView.setText(this.currentPosition.getFormattedTiltAngle());
     this.zoomTextView.setText(this.currentPosition.getFormattedZoom());
     this.focusTextView.setText(this.currentPosition.getFormattedFocus());
+  }
+
+
+  // EventBus events
+
+  @Subscribe(threadMode = ThreadMode.MAIN)
+  public void onCameraSliderConnectedEvent(CameraSliderConnectedEvent event) {
+    controlsOverlay.setVisibility(View.GONE);
+  }
+
+  @Subscribe(threadMode = ThreadMode.MAIN)
+  public void onCameraSliderDisconnectedEvent(CameraSliderDisconnectedEvent event) {
+    controlsOverlay.setVisibility(View.VISIBLE);
   }
 }

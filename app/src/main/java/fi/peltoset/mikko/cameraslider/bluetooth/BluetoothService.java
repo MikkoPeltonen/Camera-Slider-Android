@@ -18,10 +18,14 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
 
+import org.greenrobot.eventbus.EventBus;
+
 import java.util.HashMap;
 import java.util.Map;
 
 import fi.peltoset.mikko.cameraslider.R;
+import fi.peltoset.mikko.cameraslider.eventbus.CameraSliderConnectedEvent;
+import fi.peltoset.mikko.cameraslider.eventbus.CameraSliderDisconnectedEvent;
 import fi.peltoset.mikko.cameraslider.interfaces.NotificationCommunicatorListener;
 import fi.peltoset.mikko.cameraslider.miscellaneous.Constants;
 import fi.peltoset.mikko.cameraslider.miscellaneous.Motor;
@@ -58,6 +62,7 @@ public class BluetoothService extends Service {
   private BluetoothAdapter bluetoothAdapter;
   private NotificationCommunicator notificationCommunicator;
   private CameraSliderCommunicatorThread cameraSlider;
+  private EventBus eventBus;
 
   private String connectedDeviceAddress = null;
 
@@ -96,6 +101,8 @@ public class BluetoothService extends Service {
   @Override
   public int onStartCommand(Intent intent, int flags, int startId) {
     localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
+
+    eventBus = EventBus.getDefault();
 
     localBroadcastManager.sendBroadcast(new Intent(INTENT_SERVICE_STARTED));
 
@@ -268,6 +275,8 @@ public class BluetoothService extends Service {
       notificationCommunicator.displayInfoNotification(R.string.notification_connected);
       localBroadcastManager.sendBroadcast(new Intent(INTENT_DEVICE_CONNECTED));
 
+      eventBus.post(new CameraSliderConnectedEvent());
+
       isDeviceConnected = true;
       connectedDeviceAddress = deviceAddress;
     }
@@ -282,6 +291,8 @@ public class BluetoothService extends Service {
         // Because the device was previously connected, display a notification that tells to tap
         // to reconnect
         notificationCommunicator.displayTapToConnectNotification();
+
+        eventBus.post(new CameraSliderDisconnectedEvent());
       }
 
       isDeviceConnected = false;

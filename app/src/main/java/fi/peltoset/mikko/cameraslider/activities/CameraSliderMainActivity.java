@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -17,15 +16,9 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
-
-import java.lang.reflect.Constructor;
-
 import fi.peltoset.mikko.cameraslider.CameraSliderApplication;
 import fi.peltoset.mikko.cameraslider.R;
 import fi.peltoset.mikko.cameraslider.bluetooth.BluetoothServiceCommunicator;
-import fi.peltoset.mikko.cameraslider.eventbus.TestEvent;
 import fi.peltoset.mikko.cameraslider.fragments.BluetoothDeviceSelectionFragment;
 import fi.peltoset.mikko.cameraslider.fragments.ManualModeFragment;
 import fi.peltoset.mikko.cameraslider.fragments.MotorizedMovementFragment;
@@ -33,7 +26,6 @@ import fi.peltoset.mikko.cameraslider.fragments.PanoramaFragment;
 import fi.peltoset.mikko.cameraslider.fragments.SettingsFragment;
 import fi.peltoset.mikko.cameraslider.interfaces.BluetoothDeviceSelectionListener;
 import fi.peltoset.mikko.cameraslider.interfaces.BluetoothServiceListener;
-import fi.peltoset.mikko.cameraslider.interfaces.HasSetListenerMethod;
 import fi.peltoset.mikko.cameraslider.miscellaneous.Constants;
 import fi.peltoset.mikko.cameraslider.miscellaneous.KeyframePOJO;
 import fi.peltoset.mikko.cameraslider.miscellaneous.Motor;
