@@ -156,40 +156,15 @@ public class BluetoothService extends Service {
    * @param data
    */
   private void startAction(Bundle data) {
-    String actionType = data.getString(EXTRA_ACTION_TYPE);
 
-    cameraSlider.write("BEGIN_TRANSACTION");
-    cameraSlider.write("ACTION_TYPE:" + actionType);
-
-    if (actionType.equals(Constants.ACTION_TIMELAPSE)) {
-      int interval = data.getInt(EXTRA_TIMELAPSE_INTERVAL);
-      int fps = data.getInt(EXTRA_TIMELAPSE_FPS);
-
-      cameraSlider.write("INTERVAL:" + interval);
-      cameraSlider.write("FPS:" + fps);
-    } else if (actionType.equals(Constants.ACTION_VIDEO)) {
-
-    } else if (actionType.equals(Constants.ACTION_PANORAMA)) {
-
-    } else if (actionType.equals(Constants.ACTION_MANUAL)) {
-
-    }
-
-    cameraSlider.write("END_TRANSACTION");
   }
 
   private void move(Bundle data) {
-    Motor motor = (Motor) data.getSerializable("motor");
-    RotationDirection rotationDirection = (RotationDirection) data.getSerializable("rotationdirection");
 
-    cameraSlider.write("MOTOR:" + motor.toString() + ";DIR:" + rotationDirection.toString());
   }
 
   private void step(Bundle data) {
-    Motor motor = (Motor) data.getSerializable("motor");
-    RotationDirection rotationDirection = (RotationDirection) data.getSerializable("rotationdirection");
 
-    cameraSlider.write("STEP:" + motor.toString() + ";DIR:" + rotationDirection.toString());
   }
 
   /**
@@ -213,27 +188,7 @@ public class BluetoothService extends Service {
    * @param message
    */
   private void handleCameraSliderMessages(String message) {
-    // Split message into parts. The structure is as follows:
-    // key1:value1;key2:value2;key3:value3
-    Map<String, String> parameters = new HashMap<>();
 
-    String[] keyValuePairs = message.split(";");
-    for (int i = 0; i < keyValuePairs.length; i += 1) {
-      String[] splitKeyValuePairs = keyValuePairs[i].split(":");
-      parameters.put(splitKeyValuePairs[0], splitKeyValuePairs[1]);
-    }
-
-    for (Map.Entry<String, String> entry : parameters.entrySet()) {
-      Log.d(Constants.TAG, "entry: " + entry.getKey() + " " + entry.getValue());
-    }
-
-    if (message.startsWith("STATUS:")) {
-      // Received a status update from the Camera Slider
-      Log.d(Constants.TAG, "status: " + message);
-    } else if (message.startsWith("HOME:")) {
-      // Received a home location
-      Log.d(Constants.TAG, "home: " + message);
-    }
   }
 
   /**

@@ -37,7 +37,16 @@ public class CameraSliderCommunicatorThread extends Thread {
     // with a correct string.
     String initialLine = null;
 
-    write("Hello, Camera Slider!");
+    byte[] handshakeMessage = ConnectionConstants.HANDSHAKE_RESPONSE.getBytes();
+    byte[] msg = new byte[handshakeMessage.length + 3];
+    msg[0] = ConnectionConstants.FLAG_START;
+    msg[1] = ConnectionConstants.SEND_HANDSHAKE_GREETING;
+    System.arraycopy(handshakeMessage, 0, msg, 1, handshakeMessage.length);
+    msg[handshakeMessage.length + 2] = ConnectionConstants.FLAG_STOP;
+
+    write(msg);
+
+    //write("Hello, Camera Slider!");
     try {
       initialLine = bufferedReader.readLine();
     } catch (IOException e) {
@@ -53,18 +62,17 @@ public class CameraSliderCommunicatorThread extends Thread {
       listener.onConnect(socket.getRemoteDevice().getAddress());
 
       // Request device status on initial connection
-      write("STATUS?");
     }
   }
 
-  /**
-   * Send a string to the Bluetooth device
-   *
-   * @param message
-   */
-  public void write(String message) {
+  public void write(byte[] message) {
+    char[] buf = new char[message.length];
+    for (int i = 0; i < message.length; i += 1) {
+      buf[i] = (char) (message[i] & 0xff);
+    }
+
     try {
-      bufferedWriter.write(message + "\n");
+      bufferedWriter.write(buf);
       bufferedWriter.flush();
     } catch (IOException e) {
       listener.onDisconnect();
