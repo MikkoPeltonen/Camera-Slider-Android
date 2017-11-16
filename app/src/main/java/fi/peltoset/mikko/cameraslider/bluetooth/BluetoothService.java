@@ -19,6 +19,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,6 +27,7 @@ import java.util.Map;
 import fi.peltoset.mikko.cameraslider.R;
 import fi.peltoset.mikko.cameraslider.eventbus.CameraSliderConnectedEvent;
 import fi.peltoset.mikko.cameraslider.eventbus.CameraSliderDisconnectedEvent;
+import fi.peltoset.mikko.cameraslider.eventbus.ManualMoveButtonHoldEvent;
 import fi.peltoset.mikko.cameraslider.interfaces.NotificationCommunicatorListener;
 import fi.peltoset.mikko.cameraslider.miscellaneous.Constants;
 import fi.peltoset.mikko.cameraslider.miscellaneous.Motor;
@@ -81,13 +83,10 @@ public class BluetoothService extends Service {
           stopAndCancelNotification();
           break;
         case MESSAGE_START_ACTION:
-          startAction(msg.getData());
           break;
         case MESSAGE_STEP:
-          step(msg.getData());
           break;
         case MESSAGE_MOVE:
-          move(msg.getData());
           break;
         default:
           super.handleMessage(msg);
@@ -148,23 +147,6 @@ public class BluetoothService extends Service {
     }
 
     return messenger.getBinder();
-  }
-
-  /**
-   * Receives an action, parses it and sends the data to the connected device
-   *
-   * @param data
-   */
-  private void startAction(Bundle data) {
-
-  }
-
-  private void move(Bundle data) {
-
-  }
-
-  private void step(Bundle data) {
-
   }
 
   /**
@@ -297,4 +279,9 @@ public class BluetoothService extends Service {
       }
     }
   };
+
+  @Subscribe
+  public void onManualMoveButtonHoldEvent(ManualMoveButtonHoldEvent event) {
+
+  }
 }

@@ -25,8 +25,9 @@ import fi.peltoset.mikko.cameraslider.IncreaseDecreaseHandlerStub;
 import fi.peltoset.mikko.cameraslider.R;
 import fi.peltoset.mikko.cameraslider.eventbus.CameraSliderConnectedEvent;
 import fi.peltoset.mikko.cameraslider.eventbus.CameraSliderDisconnectedEvent;
+import fi.peltoset.mikko.cameraslider.eventbus.ManualMoveButtonHoldEvent;
+import fi.peltoset.mikko.cameraslider.miscellaneous.Axis;
 import fi.peltoset.mikko.cameraslider.miscellaneous.KeyframePOJO;
-import fi.peltoset.mikko.cameraslider.miscellaneous.Motor;
 import fi.peltoset.mikko.cameraslider.miscellaneous.RotationDirection;
 
 
@@ -60,8 +61,6 @@ public class ManualModeFragment extends Fragment {
     void setHome(KeyframePOJO home);
     void goHome();
     void resetHome();
-    void move(Motor motor, RotationDirection rotationDirection);
-    void step(Motor motor, RotationDirection rotationDirection);
   }
 
   public ManualModeFragment() {}
@@ -143,111 +142,94 @@ public class ManualModeFragment extends Fragment {
     controlsOverlay = (LinearLayout) view.findViewById(R.id.controlsOverlay);
 
     // Discard the current position and move to the last set home position
-    goHomeButton.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        currentPosition = new KeyframePOJO();
-        currentPosition.setSlideLength(homePosition.getSlideLength());
-        currentPosition.setPanAngle(homePosition.getPanAngle());
-        currentPosition.setTiltAngle(homePosition.getTiltAngle());
-        currentPosition.setZoom(homePosition.getZoom());
-        currentPosition.setFocus(homePosition.getFocus());
-        updateTextViews();
+    goHomeButton.setOnClickListener(v -> {
+      currentPosition = new KeyframePOJO();
+      currentPosition.setSlideLength(homePosition.getSlideLength());
+      currentPosition.setPanAngle(homePosition.getPanAngle());
+      currentPosition.setTiltAngle(homePosition.getTiltAngle());
+      currentPosition.setZoom(homePosition.getZoom());
+      currentPosition.setFocus(homePosition.getFocus());
+      updateTextViews();
 
-        final ProgressDialog progressDialog = new ProgressDialog(getActivity(), R.style.AppCompatAlertDialogStyle);
-        progressDialog.setMessage("Moving to home position...");
-        progressDialog.show();
+      final ProgressDialog progressDialog = new ProgressDialog(getActivity(), R.style.AppCompatAlertDialogStyle);
+      progressDialog.setMessage("Moving to home position...");
+      progressDialog.show();
 
-        listener.goHome();
+      listener.goHome();
 
-        new Handler().postDelayed(new Runnable() {
-          @Override
-          public void run() {
-            progressDialog.cancel();
-          }
-        }, 3000);
-      }
+      new Handler().postDelayed(new Runnable() {
+        @Override
+        public void run() {
+          progressDialog.cancel();
+        }
+      }, 3000);
     });
 
     // Set the current position as the home position
-    setHomeButton.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        homePosition = new KeyframePOJO();
-        homePosition.setSlideLength(currentPosition.getSlideLength());
-        homePosition.setPanAngle(currentPosition.getPanAngle());
-        homePosition.setTiltAngle(currentPosition.getTiltAngle());
-        homePosition.setZoom(currentPosition.getZoom());
-        homePosition.setFocus(currentPosition.getFocus());
+    setHomeButton.setOnClickListener(v -> {
+      homePosition = new KeyframePOJO();
+      homePosition.setSlideLength(currentPosition.getSlideLength());
+      homePosition.setPanAngle(currentPosition.getPanAngle());
+      homePosition.setTiltAngle(currentPosition.getTiltAngle());
+      homePosition.setZoom(currentPosition.getZoom());
+      homePosition.setFocus(currentPosition.getFocus());
 
-        currentPosition = new KeyframePOJO();
+      currentPosition = new KeyframePOJO();
 
 //        listener.setHome(homePosition);
 
-        updateTextViews();
-      }
+      updateTextViews();
     });
 
     // Reset the home position to the initial position defined by the Camera Slider
-    resetHomeButton.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getActivity());
-        alertDialogBuilder
-            .setMessage("Are you sure you want to reset the positon?")
-            .setPositiveButton("Reset", new DialogInterface.OnClickListener() {
-              @Override
-              public void onClick(DialogInterface dialog, int which) {
-                homePosition = new KeyframePOJO();
-                currentPosition = new KeyframePOJO();
+    resetHomeButton.setOnClickListener(v -> {
+      AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getActivity());
+      alertDialogBuilder
+          .setMessage("Are you sure you want to reset the positon?")
+          .setPositiveButton("Reset", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+              homePosition = new KeyframePOJO();
+              currentPosition = new KeyframePOJO();
 
-                final ProgressDialog progressDialog = new ProgressDialog(getActivity(), R.style.AppCompatAlertDialogStyle);
-                progressDialog.setMessage("Moving to initial home position...");
-                progressDialog.show();
+              final ProgressDialog progressDialog = new ProgressDialog(getActivity(), R.style.AppCompatAlertDialogStyle);
+              progressDialog.setMessage("Moving to initial home position...");
+              progressDialog.show();
 
-                listener.resetHome();
+              listener.resetHome();
 
-                new Handler().postDelayed(new Runnable() {
-                  @Override
-                  public void run() {
-                    progressDialog.cancel();
-                  }
-                }, 4000);
-              }
-            })
-            .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-              @Override
-              public void onClick(DialogInterface dialog, int which) {
+              new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                  progressDialog.cancel();
+                }
+              }, 4000);
+            }
+          })
+          .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
 
-              }
-            });
+            }
+          });
 
-        alertDialogBuilder.create().show();
-      }
+      alertDialogBuilder.create().show();
     });
 
     new IncreaseDecreaseHandler(slideRight, slideLeft, new IncreaseDecreaseHandlerStub() {
       @Override
       public void onIncreaseButtonStateChange(boolean pressed) {
-        if (pressed) {
-          listener.move(Motor.SLIDE, RotationDirection.CW);
-        } else {
-          listener.move(Motor.SLIDE, RotationDirection.STOP);
-        }
+
       }
 
       @Override
       public void onDecreaseButtonStateChange(boolean pressed) {
-        if (pressed) {
-          listener.move(Motor.SLIDE, RotationDirection.CCW);
-        } else {
-          listener.move(Motor.SLIDE, RotationDirection.STOP);
-        }
+
       }
 
       @Override
       public void step(RotationDirection rotationDirection) {
-        listener.step(Motor.SLIDE, rotationDirection);
+
       }
 
       @Override
@@ -266,12 +248,14 @@ public class ManualModeFragment extends Fragment {
     new IncreaseDecreaseHandler(panCW, panCCW, new IncreaseDecreaseHandlerStub() {
       @Override
       public void onIncrease() {
+        eventBus.post(new ManualMoveButtonHoldEvent(Axis.PAN, RotationDirection.CW));
         currentPosition.setPanAngle(currentPosition.getPanAngle() + 10);
         updateTextViews();
       }
 
       @Override
       public void onDecrease() {
+        eventBus.post(new ManualMoveButtonHoldEvent(Axis.PAN, RotationDirection.CCW));
         currentPosition.setPanAngle(currentPosition.getPanAngle() - 10);
         updateTextViews();
       }

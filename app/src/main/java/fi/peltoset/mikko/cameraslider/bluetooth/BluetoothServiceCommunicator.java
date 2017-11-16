@@ -72,17 +72,6 @@ public class BluetoothServiceCommunicator {
     }
   }
 
-  public void move(Motor motor, RotationDirection rotationDirection) {
-
-  }
-
-  public void step(Motor motor, RotationDirection rotationDirection) {
-
-  }
-
-
-
-
   /**
    * Start the Bluetooth service
    */

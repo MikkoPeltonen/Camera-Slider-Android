@@ -46,7 +46,6 @@ public class CameraSliderCommunicatorThread extends Thread {
 
     write(msg);
 
-    //write("Hello, Camera Slider!");
     try {
       initialLine = bufferedReader.readLine();
     } catch (IOException e) {

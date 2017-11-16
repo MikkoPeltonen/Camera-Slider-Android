@@ -357,14 +357,4 @@ public class CameraSliderMainActivity extends AppCompatActivity
   public void resetHome() {
     Toast.makeText(getApplicationContext(), "reset home", Toast.LENGTH_SHORT).show();
   }
-
-  @Override
-  public void move(Motor motor, RotationDirection rotationDirection) {
-    bluetoothServiceCommunicator.move(motor, rotationDirection);
-  }
-
-  @Override
-  public void step(Motor motor, RotationDirection rotationDirection) {
-    bluetoothServiceCommunicator.step(motor, rotationDirection);
-  }
 }
