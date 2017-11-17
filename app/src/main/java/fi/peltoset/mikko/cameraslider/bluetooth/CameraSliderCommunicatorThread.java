@@ -1,41 +1,48 @@
 package fi.peltoset.mikko.cameraslider.bluetooth;
 
 import android.bluetooth.BluetoothSocket;
+import android.util.Log;
+import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
+import java.io.Console;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.util.Arrays;
+
+import fi.peltoset.mikko.cameraslider.miscellaneous.Constants;
 
 public class CameraSliderCommunicatorThread extends Thread {
   private BluetoothSocket socket;
-  private BufferedReader bufferedReader;
-  private BufferedWriter bufferedWriter;
   private SocketListener listener;
+  private InputStream inputStream;
+  private OutputStream outputStream;
 
   interface SocketListener {
     void onConnect(String deviceAddress);
     void onDisconnect();
     void onConnectionFailed();
     void onDeviceDetectionFail();
-    void onNewMessage(String message);
+    void onNewMessage(byte[] message);
   }
+
+  private boolean verified = false;
 
   public CameraSliderCommunicatorThread(BluetoothSocket socket, final SocketListener listener) {
     this.socket = socket;
     this.listener = listener;
 
     try {
-      bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-      bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+      inputStream = socket.getInputStream();
+      outputStream = socket.getOutputStream();
     } catch (IOException e) {
       e.printStackTrace();
     }
-
-    // Test that the device is a true Camera Slider. Send a line, expect the device to respond
-    // with a correct string.
-    String initialLine = null;
 
     byte[] handshakeMessage = ConnectionConstants.HANDSHAKE_RESPONSE.getBytes();
     byte[] msg = new byte[handshakeMessage.length + 3];
@@ -45,34 +52,12 @@ public class CameraSliderCommunicatorThread extends Thread {
     msg[handshakeMessage.length + 2] = ConnectionConstants.FLAG_STOP;
 
     write(msg);
-
-    try {
-      initialLine = bufferedReader.readLine();
-    } catch (IOException e) {
-      listener.onConnectionFailed();
-      e.printStackTrace();
-      cancel();
-    }
-
-    if (initialLine == null || !initialLine.equals("Hello, Android!")) {
-      listener.onDeviceDetectionFail();
-      cancel();
-    } else {
-      listener.onConnect(socket.getRemoteDevice().getAddress());
-
-      // Request device status on initial connection
-    }
   }
 
   public void write(byte[] message) {
-    char[] buf = new char[message.length];
-    for (int i = 0; i < message.length; i += 1) {
-      buf[i] = (char) (message[i] & 0xff);
-    }
-
     try {
-      bufferedWriter.write(buf);
-      bufferedWriter.flush();
+      outputStream.write(message);
+      outputStream.flush();
     } catch (IOException e) {
       listener.onDisconnect();
       e.printStackTrace();
@@ -84,10 +69,30 @@ public class CameraSliderCommunicatorThread extends Thread {
    * Start listening to incoming lines
    */
   public void run() {
-    String line;
     try {
-      while ((line = bufferedReader.readLine()) != null) {
-        listener.onNewMessage(line);
+      ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+      int inByte;
+      while((inByte = inputStream.read()) != -1) {
+        if (inByte == 0x01) {
+          buffer.reset();
+        }
+
+        buffer.write(inByte);
+
+        if (inByte == 0x00) {
+          if (verified) {
+            listener.onNewMessage(buffer.toByteArray());
+          } else {
+            byte[] rawData = buffer.toByteArray();
+            byte[] data = Arrays.copyOfRange(rawData, 2, rawData.length - 1);
+            StringBuilder str = new StringBuilder();
+            for (byte b : data) {
+              str.append(String.format("%02X ", b));
+            }
+            Log.d(Constants.TAG, "Not yet verified");
+          }
+          Log.d(Constants.TAG, str.toString());
+        }
       }
     } catch (IOException e) {
       listener.onDisconnect();
@@ -101,13 +106,13 @@ public class CameraSliderCommunicatorThread extends Thread {
    */
   public void cancel() {
     try {
-      bufferedReader.close();
+      outputStream.close();
+      inputStream.close();
       socket.close();
     } catch (IOException e) {
       e.printStackTrace();
     }
 
     Thread.currentThread().interrupt();
-
   }
 }

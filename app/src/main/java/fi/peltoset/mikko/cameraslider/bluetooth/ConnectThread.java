@@ -47,6 +47,9 @@ public class ConnectThread extends Thread {
 
     try {
       socket.connect();
+
+      // Inform the listener about a succesful connection.
+      listener.onConnect(socket);
     } catch (IOException e) {
       e.printStackTrace();
       listener.onConnectionFail();
@@ -57,9 +60,6 @@ public class ConnectThread extends Thread {
         e1.printStackTrace();
       }
     }
-
-    // Inform the listener about a succesful connection.
-    listener.onConnect(socket);
   }
 
   public void cancel() {

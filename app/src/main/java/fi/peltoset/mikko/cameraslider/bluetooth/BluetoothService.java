@@ -169,8 +169,12 @@ public class BluetoothService extends Service {
    *
    * @param message
    */
-  private void handleCameraSliderMessages(String message) {
-
+  private void handleCameraSliderMessages(byte[] message) {
+    StringBuilder str = new StringBuilder();
+    for (byte b : message) {
+      str.append(String.format("%02X ", b));
+    }
+    Log.d(Constants.TAG, "msg received: " + str);
   }
 
   /**
@@ -189,6 +193,7 @@ public class BluetoothService extends Service {
     ConnectThread connectThread = new ConnectThread(device, new ConnectThread.ConnectThreadListener() {
       @Override
       public void onConnect(BluetoothSocket socket) {
+        Log.d(Constants.TAG, "connectThread listener onConnect");
         cameraSlider = new CameraSliderCommunicatorThread(socket, cameraSliderListener);
         cameraSlider.start();
       }
@@ -254,7 +259,7 @@ public class BluetoothService extends Service {
 
     // Called every time the Bluetooth device sends a message
     @Override
-    public void onNewMessage(String message) {
+    public void onNewMessage(byte[] message) {
       handleCameraSliderMessages(message);
     }
   };
