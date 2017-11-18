@@ -30,8 +30,6 @@ public class ConnectThread extends Thread {
       tmpSocket = device.createRfcommSocketToServiceRecord(UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"));
     } catch (Exception e) {
       e.printStackTrace();
-      listener.onConnectionFail();
-      cancel();
     }
 
     socket = tmpSocket;
@@ -41,15 +39,8 @@ public class ConnectThread extends Thread {
    * This will either connect or fail and in either case will run straight through.
    */
   public void run() {
-    if (socket == null) {
-      cancel();
-    }
-
     try {
       socket.connect();
-
-      // Inform the listener about a succesful connection.
-      listener.onConnect(socket);
     } catch (IOException e) {
       e.printStackTrace();
       listener.onConnectionFail();
@@ -59,7 +50,14 @@ public class ConnectThread extends Thread {
       } catch (IOException e1) {
         e1.printStackTrace();
       }
+
+      listener.onConnectionFail();
+
+      return;
     }
+
+    // Inform the listener about a successful connection.
+    listener.onConnect(socket);
   }
 
   public void cancel() {
@@ -70,7 +68,5 @@ public class ConnectThread extends Thread {
     } catch (IOException e) {
       e.printStackTrace();
     }
-
-    Thread.currentThread().interrupt();
   }
 }

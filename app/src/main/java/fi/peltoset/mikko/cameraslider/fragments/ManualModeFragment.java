@@ -2,7 +2,6 @@ package fi.peltoset.mikko.cameraslider.fragments;
 
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
@@ -17,14 +16,10 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
-import org.greenrobot.eventbus.ThreadMode;
 
 import fi.peltoset.mikko.cameraslider.IncreaseDecreaseHandler;
 import fi.peltoset.mikko.cameraslider.IncreaseDecreaseHandlerStub;
 import fi.peltoset.mikko.cameraslider.R;
-import fi.peltoset.mikko.cameraslider.eventbus.CameraSliderConnectedEvent;
-import fi.peltoset.mikko.cameraslider.eventbus.CameraSliderDisconnectedEvent;
 import fi.peltoset.mikko.cameraslider.eventbus.ManualMoveButtonHoldEvent;
 import fi.peltoset.mikko.cameraslider.miscellaneous.Axis;
 import fi.peltoset.mikko.cameraslider.miscellaneous.KeyframePOJO;
@@ -93,13 +88,11 @@ public class ManualModeFragment extends Fragment {
     }
 
     eventBus = EventBus.getDefault();
-    eventBus.register(this);
   }
 
   @Override
   public void onDestroy() {
     super.onDestroy();
-    eventBus.unregister(this);
   }
 
   @Override
@@ -157,12 +150,7 @@ public class ManualModeFragment extends Fragment {
 
       listener.goHome();
 
-      new Handler().postDelayed(new Runnable() {
-        @Override
-        public void run() {
-          progressDialog.cancel();
-        }
-      }, 3000);
+      new Handler().postDelayed(() -> progressDialog.cancel(), 3000);
     });
 
     // Set the current position as the home position
@@ -176,8 +164,6 @@ public class ManualModeFragment extends Fragment {
 
       currentPosition = new KeyframePOJO();
 
-//        listener.setHome(homePosition);
-
       updateTextViews();
     });
 
@@ -186,31 +172,20 @@ public class ManualModeFragment extends Fragment {
       AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getActivity());
       alertDialogBuilder
           .setMessage("Are you sure you want to reset the positon?")
-          .setPositiveButton("Reset", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-              homePosition = new KeyframePOJO();
-              currentPosition = new KeyframePOJO();
+          .setPositiveButton("Reset", (dialog, which) -> {
+            homePosition = new KeyframePOJO();
+            currentPosition = new KeyframePOJO();
 
-              final ProgressDialog progressDialog = new ProgressDialog(getActivity(), R.style.AppCompatAlertDialogStyle);
-              progressDialog.setMessage("Moving to initial home position...");
-              progressDialog.show();
+            final ProgressDialog progressDialog = new ProgressDialog(getActivity(), R.style.AppCompatAlertDialogStyle);
+            progressDialog.setMessage("Moving to initial home position...");
+            progressDialog.show();
 
-              listener.resetHome();
+            listener.resetHome();
 
-              new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                  progressDialog.cancel();
-                }
-              }, 4000);
-            }
+            new Handler().postDelayed(() -> progressDialog.cancel(), 4000);
           })
-          .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
+          .setNegativeButton("Cancel", (dialog, which) -> {
 
-            }
           });
 
       alertDialogBuilder.create().show();
@@ -314,18 +289,5 @@ public class ManualModeFragment extends Fragment {
     this.tiltAngleTextView.setText(this.currentPosition.getFormattedTiltAngle());
     this.zoomTextView.setText(this.currentPosition.getFormattedZoom());
     this.focusTextView.setText(this.currentPosition.getFormattedFocus());
-  }
-
-
-  // EventBus events
-
-  @Subscribe(threadMode = ThreadMode.MAIN)
-  public void onCameraSliderConnectedEvent(CameraSliderConnectedEvent event) {
-    controlsOverlay.setVisibility(View.GONE);
-  }
-
-  @Subscribe(threadMode = ThreadMode.MAIN)
-  public void onCameraSliderDisconnectedEvent(CameraSliderDisconnectedEvent event) {
-    controlsOverlay.setVisibility(View.VISIBLE);
   }
 }
