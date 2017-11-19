@@ -17,11 +17,10 @@ import android.widget.TextView;
 
 import fi.peltoset.mikko.cameraslider.IncreaseDecreaseHandler;
 import fi.peltoset.mikko.cameraslider.IncreaseDecreaseHandlerStub;
-import fi.peltoset.mikko.cameraslider.miscellaneous.KeyframePOJO;
 import fi.peltoset.mikko.cameraslider.R;
 import fi.peltoset.mikko.cameraslider.dialogs.ValuePickerDialog;
-import fi.peltoset.mikko.cameraslider.interfaces.IncreaseDecreaseListener;
 import fi.peltoset.mikko.cameraslider.interfaces.ValuePickerDialogInterface;
+import fi.peltoset.mikko.cameraslider.miscellaneous.KeyframePOJO;
 
 
 public class KeyframeEditActivity extends AppCompatActivity implements ValuePickerDialogInterface {

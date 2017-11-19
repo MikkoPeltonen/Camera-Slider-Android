@@ -9,11 +9,18 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import fi.peltoset.mikko.cameraslider.fragments.ManualModeFragment;
+import fi.peltoset.mikko.cameraslider.miscellaneous.Axis;
 import fi.peltoset.mikko.cameraslider.miscellaneous.Constants;
+import fi.peltoset.mikko.cameraslider.miscellaneous.RotationDirection;
 
 public class CameraSliderCommunicator {
   private Activity context;
@@ -40,6 +47,7 @@ public class CameraSliderCommunicator {
     @Override
     public void onServiceConnected(ComponentName name, IBinder service) {
       bluetoothService = ((BluetoothService.LocalBinder) service).getService();
+      bluetoothService.addListener(serviceMessenger);
     }
 
     @Override
@@ -48,45 +56,54 @@ public class CameraSliderCommunicator {
     }
   };
 
-  // Used to receive messages from the service
-  private BroadcastReceiver serviceMessageReceiver = new BroadcastReceiver() {
+  // Used to receive messages from the service. A Messenger or a BroadcastReceiver must be used
+  // to get data back from the Service because they operate in different threads. A interface
+  // callback works but won't run on the UI thread which results into problems later on.
+  private class ServiceMessageHandler extends Handler {
     @Override
-    public void onReceive(Context context, Intent intent) {
-      switch (intent.getAction()) {
-        case "connected":
+    public void handleMessage(Message msg) {
+      Bundle data = msg.getData();
+
+      switch (msg.what) {
+        case BluetoothService.MSG_CONNECTED:
           isConnected = true;
           listener.onConnect();
+          verificationHandler.post(verificationRunnable);
           break;
-        case "disconnect":
+        case BluetoothService.MSG_DISCONNECTED:
           isConnected = false;
           listener.onDisconnect();
+          verificationHandler.removeCallbacks(verificationRunnable);
           break;
-        case "verification":
+        case BluetoothService.MSG_VERIFICATION_FAIL:
           isConnected = false;
           listener.onVerificationFail();
           break;
-        case "msg":
+        case BluetoothService.MSG_MESSAGE:
+          Log.d(Constants.TAG, "comm: " + data.getByteArray(BluetoothService.MSG_MESSAGE_DATA_MESSAGE).toString());
           break;
+        default:
+          super.handleMessage(msg);
       }
     }
+  }
+
+  private final Messenger serviceMessenger = new Messenger(new ServiceMessageHandler());
+
+  // When Camera Slider is connected, it expects a handshake message every VERIFICATION_INTERVAL
+  // milliseconds to confirm the connection is still online. This is because the Bluetooth module
+  // on Arduino has no way of knowing if the socket is still open or not. If a message is not
+  // received often enough, the connection status is set to disconnected on Arduino. After that
+  // Android needs to re-establish the connection by going trough the handshake verification
+  // process.
+  private Handler verificationHandler = new Handler();
+  private Runnable verificationRunnable = new Runnable() {
+    @Override
+    public void run() {
+      bluetoothService.sendCommand(ConnectionConstants.SEND_VERIFICATION, new byte[]{});
+      verificationHandler.postDelayed(this, ConnectionConstants.VERIFICATION_INTERVAL);
+    }
   };
-
-  /**
-   * Parent activity lifecycle hook register to BroadcastReceivers
-   */
-  public void onResume() {
-    IntentFilter intentFilter = new IntentFilter();
-    intentFilter.addAction("connected");
-
-    LocalBroadcastManager.getInstance(context).registerReceiver(serviceMessageReceiver, intentFilter);
-  }
-
-  /**
-   * Parent activity lifecycle hook to unregister BroadcastReceivers
-   */
-  public void onPause() {
-    LocalBroadcastManager.getInstance(context).unregisterReceiver(serviceMessageReceiver);
-  }
 
   /**
    * Start the Bluetooth service
@@ -105,8 +122,8 @@ public class CameraSliderCommunicator {
    */
   public void stopService() {
     if (isServiceRunning(BluetoothService.class) && bluetoothService != null) {
-      unbindService();
       bluetoothService.stopAndCancelNotification();
+      unbindService();
     }
   }
 
@@ -188,5 +205,52 @@ public class CameraSliderCommunicator {
    */
   public boolean isConnected() {
     return isConnected;
+  }
+
+
+  private byte setBit(byte b, int nthBit, boolean on) {
+    return (byte) (b ^ ((-(on ? 1 : 0) ^ b) & (1 << (7 - nthBit))));
+  }
+
+  private byte setAxisInstructions(byte b, Axis axis, RotationDirection direction) {
+    int firstBit = 0;
+    if (axis == Axis.SLIDE || axis == Axis.FOCUS) {
+      firstBit = 0;
+    } else if (axis == Axis.PAN || axis == Axis.ZOOM) {
+      firstBit = 2;
+    } else if (axis == Axis.TILT) {
+      firstBit = 4;
+    }
+
+    boolean isMoving = direction != RotationDirection.STOP;
+    boolean isCW = isMoving && direction == RotationDirection.CW;
+
+    byte returnByte = b;
+    returnByte = setBit(returnByte, firstBit, isCW);
+    returnByte = setBit(returnByte, firstBit + 1, isMoving);
+
+    return returnByte;
+  }
+
+  /**********************
+   *                    *
+   * Operation commands *
+   *                    *
+   **********************/
+
+  public void moveManually(ManualModeFragment.ManualMoveInstructions instructions) {
+    byte[] payload = { 0, 0 };
+
+    payload[0] = setAxisInstructions(payload[0], Axis.SLIDE, instructions.slide);
+    payload[0] = setAxisInstructions(payload[0], Axis.PAN, instructions.pan);
+    payload[0] = setAxisInstructions(payload[0], Axis.TILT, instructions.tilt);
+    payload[1] = setAxisInstructions(payload[1], Axis.FOCUS, instructions.focus);
+    payload[1] = setAxisInstructions(payload[1], Axis.ZOOM, instructions.zoom);
+
+    Log.d(Constants.TAG, "bits: " + String.format("%8s", Integer.toBinaryString(0xff & payload[0])).replace(" ", "0"));
+    Log.d(Constants.TAG, "bits: " + String.format("%8s", Integer.toBinaryString(0xff & payload[1])).replace(" ", "0"));
+
+
+    bluetoothService.sendCommand(ConnectionConstants.MOVE_MOTORS, payload);
   }
 }

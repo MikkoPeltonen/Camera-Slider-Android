@@ -47,46 +47,44 @@ public class IncreaseDecreaseHandler {
     this.increaseButton = increaseButton;
     this.decreaseButton = decreaseButton;
 
-    View.OnTouchListener onTouchListener = new View.OnTouchListener() {
-      @Override
-      public boolean onTouch(View v, MotionEvent event) {
-        if (event.getAction() == MotionEvent.ACTION_DOWN) {
-          // Button pressed
+    View.OnTouchListener onTouchListener = (v, event) -> {
+      if (event.getAction() == MotionEvent.ACTION_DOWN) {
+        // Button pressed
 
-          if (v.getId() == IncreaseDecreaseHandler.this.increaseButton.getId()) {
-            currentState = State.INCREASE;
-          } else if (v.getId() == IncreaseDecreaseHandler.this.decreaseButton.getId()) {
-            currentState = State.DECREASE;
-          }
-
-          handler.postDelayed(detectLongPress, 500);
-        } else if (event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_CANCEL) {
-          // Button released
-
-          handler.removeCallbacks(detectLongPress);
-
-          if (isLongPress) {
-            if (currentState == State.INCREASE) {
-              IncreaseDecreaseHandler.this.listener.onIncreaseButtonStateChange(false);
-            } else if (currentState == State.DECREASE) {
-              IncreaseDecreaseHandler.this.listener.onDecreaseButtonStateChange(false);
-            }
-          } else {
-            if (v.getId() == IncreaseDecreaseHandler.this.increaseButton.getId()) {
-              listener.step(RotationDirection.CW);
-              listener.onIncrease();
-            } else if (v.getId() == IncreaseDecreaseHandler.this.decreaseButton.getId()) {
-              listener.step(RotationDirection.CCW);
-              listener.onDecrease();
-            }
-          }
-
-          isLongPress = false;
-          currentState = State.NONE;
+        if (v.getId() == IncreaseDecreaseHandler.this.increaseButton.getId()) {
+          currentState = State.INCREASE;
+        } else if (v.getId() == IncreaseDecreaseHandler.this.decreaseButton.getId()) {
+          currentState = State.DECREASE;
         }
 
-        return true;
+        handler.postDelayed(detectLongPress, 500);
+      } else if (event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_CANCEL) {
+        // Button released
+        v.performClick();
+
+        handler.removeCallbacks(detectLongPress);
+
+        if (isLongPress) {
+          if (currentState == State.INCREASE) {
+            IncreaseDecreaseHandler.this.listener.onIncreaseButtonStateChange(false);
+          } else if (currentState == State.DECREASE) {
+            IncreaseDecreaseHandler.this.listener.onDecreaseButtonStateChange(false);
+          }
+        } else {
+          if (v.getId() == IncreaseDecreaseHandler.this.increaseButton.getId()) {
+            listener.onIncrease();
+          } else if (v.getId() == IncreaseDecreaseHandler.this.decreaseButton.getId()) {
+            listener.onDecrease();
+          }
+        }
+
+        listener.onStop();
+
+        isLongPress = false;
+        currentState = State.NONE;
       }
+
+      return true;
     };
 
     increaseButton.setOnTouchListener(onTouchListener);

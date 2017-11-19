@@ -1,7 +1,6 @@
 package fi.peltoset.mikko.cameraslider;
 
 import fi.peltoset.mikko.cameraslider.interfaces.IncreaseDecreaseListener;
-import fi.peltoset.mikko.cameraslider.miscellaneous.RotationDirection;
 
 public class IncreaseDecreaseHandlerStub implements IncreaseDecreaseListener {
   @Override
@@ -17,5 +16,5 @@ public class IncreaseDecreaseHandlerStub implements IncreaseDecreaseListener {
   public void onDecreaseButtonStateChange(boolean pressed) {}
 
   @Override
-  public void step(RotationDirection rotationDirection) {}
+  public void onStop() {}
 }

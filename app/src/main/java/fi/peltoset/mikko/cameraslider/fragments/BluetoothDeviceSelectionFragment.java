@@ -111,50 +111,38 @@ public class BluetoothDeviceSelectionFragment extends Fragment {
 
     // If a device is previously connected but is not active at the moment, clicking on the
     // top info panel should try to reconnect
-    deviceInfoPanel.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        listener.reconnect();
-      }
-    });
+    deviceInfoPanel.setOnClickListener(v -> listener.reconnect());
 
     pairedBluetoothDevicesListView.setAdapter(pairedBluetoothDevicesArrayAdapter);
-    pairedBluetoothDevicesListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-      @Override
-      public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        bluetoothAdapter.cancelDiscovery();
+    pairedBluetoothDevicesListView.setOnItemClickListener((parent, view1, position, id) -> {
+      bluetoothAdapter.cancelDiscovery();
 
-        listener.onBluetoothDeviceSelected(pairedBluetoothDevices.get(position));
-      }
+      listener.onBluetoothDeviceSelected(pairedBluetoothDevices.get(position));
     });
 
     availableBluetoothDevicesListView.setAdapter(availableBluetoothDevicesArrayAdapter);
-    availableBluetoothDevicesListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-      @Override
-      public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        bluetoothAdapter.cancelDiscovery();
+    availableBluetoothDevicesListView.setOnItemClickListener((parent, view12, position, id) -> {
+      bluetoothAdapter.cancelDiscovery();
 
-        listener.onBluetoothDeviceSelected(availableBluetoothDevices.get(position));
-      }
+      listener.onBluetoothDeviceSelected(availableBluetoothDevices.get(position));
     });
 
-    // If permission is granted, register receivers to find devices
+    // Access to coarse location info is required to be able to perform a Bluetooth search. Check
+    // if the permission has been granted and if so, register BroadcastReceivers to handle any
+    // Bluetooth device search results.
     if (ContextCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
       registerReceivers();
     }
 
     // Handle Bluetooth search button clicks
-    startStopSearchButton.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        // Check if coarse location permission is granted. If not, request for the permission.
-        // This is required to receive ACTION_FOUND with a BroadcastReceiver.
-        if (ContextCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-          ActivityCompat.requestPermissions(getActivity(), new String[] { android.Manifest.permission.ACCESS_COARSE_LOCATION }, COARSE_LOCATION_REQUEST_CODE);
-        } else {
-          // Otherwise toggle discovery mode
-          toggleDiscovery();
-        }
+    startStopSearchButton.setOnClickListener(v -> {
+      // Check if coarse location permission is granted. If not, request for the permission.
+      // This is required to receive ACTION_FOUND with a BroadcastReceiver.
+      if (ContextCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        ActivityCompat.requestPermissions(getActivity(), new String[] { android.Manifest.permission.ACCESS_COARSE_LOCATION }, COARSE_LOCATION_REQUEST_CODE);
+      } else {
+        // Otherwise toggle discovery mode
+        toggleDiscovery();
       }
     });
 
@@ -244,7 +232,13 @@ public class BluetoothDeviceSelectionFragment extends Fragment {
     super.onDetach();
 
     listener = null;
-    getActivity().unregisterReceiver(broadcastReceiver);
+
+    try {
+      getActivity().unregisterReceiver(broadcastReceiver);
+    } catch (IllegalArgumentException e) {
+      // BroadcastReceiver wasn't registered. This is because ACCESS_COARSE_LOCATION permission was
+      // not granted to perform Bluetooth device search.
+    }
   }
 
   private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {

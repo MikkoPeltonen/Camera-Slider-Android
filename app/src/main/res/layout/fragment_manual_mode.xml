@@ -362,21 +362,21 @@
             android:background="#e6ffffff"
             android:clickable="true"
             android:gravity="center_vertical|center_horizontal"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:visibility="gone">
 
             <TextView
                 android:id="@+id/textView24"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Not connected"
-                android:textSize="36sp"/>
+                android:textSize="36sp" />
 
             <TextView
                 android:id="@+id/textView25"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="connect the device and try again"
-                />
+                android:text="connect the device and try again" />
         </LinearLayout>
 
     </FrameLayout>

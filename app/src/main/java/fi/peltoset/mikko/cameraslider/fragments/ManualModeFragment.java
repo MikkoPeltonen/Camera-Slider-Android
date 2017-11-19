@@ -4,7 +4,6 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
@@ -20,8 +19,6 @@ import org.greenrobot.eventbus.EventBus;
 import fi.peltoset.mikko.cameraslider.IncreaseDecreaseHandler;
 import fi.peltoset.mikko.cameraslider.IncreaseDecreaseHandlerStub;
 import fi.peltoset.mikko.cameraslider.R;
-import fi.peltoset.mikko.cameraslider.eventbus.ManualMoveButtonHoldEvent;
-import fi.peltoset.mikko.cameraslider.miscellaneous.Axis;
 import fi.peltoset.mikko.cameraslider.miscellaneous.KeyframePOJO;
 import fi.peltoset.mikko.cameraslider.miscellaneous.RotationDirection;
 
@@ -52,10 +49,21 @@ public class ManualModeFragment extends Fragment {
   private ManualModeListener listener;
   private EventBus eventBus;
 
+  public class ManualMoveInstructions {
+    public RotationDirection slide = RotationDirection.STOP;
+    public RotationDirection pan = RotationDirection.STOP;
+    public RotationDirection tilt = RotationDirection.STOP;
+    public RotationDirection zoom = RotationDirection.STOP;
+    public RotationDirection focus = RotationDirection.STOP;
+  }
+
+  ManualMoveInstructions manualMoveInstructions = new ManualMoveInstructions();
+
   public interface ManualModeListener {
     void setHome(KeyframePOJO home);
     void goHome();
     void resetHome();
+    void moveManually(ManualMoveInstructions instructions);
   }
 
   public ManualModeFragment() {}
@@ -88,16 +96,6 @@ public class ManualModeFragment extends Fragment {
     }
 
     eventBus = EventBus.getDefault();
-  }
-
-  @Override
-  public void onDestroy() {
-    super.onDestroy();
-  }
-
-  @Override
-  public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-    super.onActivityCreated(savedInstanceState);
   }
 
   @Override
@@ -193,28 +191,23 @@ public class ManualModeFragment extends Fragment {
 
     new IncreaseDecreaseHandler(slideRight, slideLeft, new IncreaseDecreaseHandlerStub() {
       @Override
-      public void onIncreaseButtonStateChange(boolean pressed) {
-
-      }
-
-      @Override
-      public void onDecreaseButtonStateChange(boolean pressed) {
-
-      }
-
-      @Override
-      public void step(RotationDirection rotationDirection) {
-
+      public void onStop() {
+        manualMoveInstructions.slide = RotationDirection.STOP;
+        listener.moveManually(manualMoveInstructions);
       }
 
       @Override
       public void onIncrease() {
+        manualMoveInstructions.slide = RotationDirection.CW;
+        listener.moveManually(manualMoveInstructions);
         currentPosition.setSlideLength(currentPosition.getSlideLength() + 1);
         updateTextViews();
       }
 
       @Override
       public void onDecrease() {
+        manualMoveInstructions.slide = RotationDirection.CCW;
+        listener.moveManually(manualMoveInstructions);
         currentPosition.setSlideLength(currentPosition.getSlideLength() - 1);
         updateTextViews();
       }
@@ -222,15 +215,23 @@ public class ManualModeFragment extends Fragment {
 
     new IncreaseDecreaseHandler(panCW, panCCW, new IncreaseDecreaseHandlerStub() {
       @Override
+      public void onStop() {
+        manualMoveInstructions.pan = RotationDirection.STOP;
+        listener.moveManually(manualMoveInstructions);
+      }
+
+      @Override
       public void onIncrease() {
-        eventBus.post(new ManualMoveButtonHoldEvent(Axis.PAN, RotationDirection.CW));
+        manualMoveInstructions.pan = RotationDirection.CW;
+        listener.moveManually(manualMoveInstructions);
         currentPosition.setPanAngle(currentPosition.getPanAngle() + 10);
         updateTextViews();
       }
 
       @Override
       public void onDecrease() {
-        eventBus.post(new ManualMoveButtonHoldEvent(Axis.PAN, RotationDirection.CCW));
+        manualMoveInstructions.pan = RotationDirection.CCW;
+        listener.moveManually(manualMoveInstructions);
         currentPosition.setPanAngle(currentPosition.getPanAngle() - 10);
         updateTextViews();
       }
@@ -238,13 +239,23 @@ public class ManualModeFragment extends Fragment {
 
     new IncreaseDecreaseHandler(tiltCW, tiltCCW, new IncreaseDecreaseHandlerStub() {
       @Override
+      public void onStop() {
+        manualMoveInstructions.tilt = RotationDirection.STOP;
+        listener.moveManually(manualMoveInstructions);
+      }
+
+      @Override
       public void onIncrease() {
+        manualMoveInstructions.tilt = RotationDirection.CW;
+        listener.moveManually(manualMoveInstructions);
         currentPosition.setTiltAngle(currentPosition.getTiltAngle() + 10);
         updateTextViews();
       }
 
       @Override
       public void onDecrease() {
+        manualMoveInstructions.tilt = RotationDirection.CCW;
+        listener.moveManually(manualMoveInstructions);
         currentPosition.setTiltAngle(currentPosition.getTiltAngle() - 10);
         updateTextViews();
       }
@@ -252,13 +263,23 @@ public class ManualModeFragment extends Fragment {
 
     new IncreaseDecreaseHandler(zoomCW, zoomCCW, new IncreaseDecreaseHandlerStub() {
       @Override
+      public void onStop() {
+        manualMoveInstructions.zoom = RotationDirection.STOP;
+        listener.moveManually(manualMoveInstructions);
+      }
+
+      @Override
       public void onIncrease() {
+        manualMoveInstructions.zoom = RotationDirection.CW;
+        listener.moveManually(manualMoveInstructions);
         currentPosition.setZoom(currentPosition.getZoom() + 10);
         updateTextViews();
       }
 
       @Override
       public void onDecrease() {
+        manualMoveInstructions.zoom = RotationDirection.CCW;
+        listener.moveManually(manualMoveInstructions);
         currentPosition.setZoom(currentPosition.getZoom() - 10);
         updateTextViews();
       }
@@ -266,13 +287,23 @@ public class ManualModeFragment extends Fragment {
 
     new IncreaseDecreaseHandler(focusCW, focusCCW, new IncreaseDecreaseHandlerStub() {
       @Override
+      public void onStop() {
+        manualMoveInstructions.focus = RotationDirection.STOP;
+        listener.moveManually(manualMoveInstructions);
+      }
+
+      @Override
       public void onIncrease() {
+        manualMoveInstructions.focus = RotationDirection.CW;
+        listener.moveManually(manualMoveInstructions);
         currentPosition.setFocus(currentPosition.getFocus() + 10);
         updateTextViews();
       }
 
       @Override
       public void onDecrease() {
+        manualMoveInstructions.focus = RotationDirection.CCW;
+        listener.moveManually(manualMoveInstructions);
         currentPosition.setFocus(currentPosition.getFocus() - 10);
         updateTextViews();
       }

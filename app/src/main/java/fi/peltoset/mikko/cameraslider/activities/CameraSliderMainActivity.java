@@ -12,7 +12,6 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Toast;
 
@@ -25,7 +24,6 @@ import fi.peltoset.mikko.cameraslider.fragments.MotorizedMovementFragment;
 import fi.peltoset.mikko.cameraslider.fragments.PanoramaFragment;
 import fi.peltoset.mikko.cameraslider.fragments.SettingsFragment;
 import fi.peltoset.mikko.cameraslider.interfaces.BluetoothDeviceSelectionListener;
-import fi.peltoset.mikko.cameraslider.miscellaneous.Constants;
 import fi.peltoset.mikko.cameraslider.miscellaneous.KeyframePOJO;
 
 public class CameraSliderMainActivity extends AppCompatActivity
@@ -108,8 +106,6 @@ public class CameraSliderMainActivity extends AppCompatActivity
     } catch (ClassNotFoundException e) {
       e.printStackTrace();
     }
-
-    cameraSliderCommunicator = new CameraSliderCommunicator(this, cameraSliderCommunicatorInterface);
   }
 
 
@@ -120,34 +116,20 @@ public class CameraSliderMainActivity extends AppCompatActivity
   }
 
   @Override
-  protected void onStart() {
-    super.onStart();
+  protected void onResume() {
+    super.onResume();
 
-    // onStart is called every time the Activity is brought into view. If the CameraSliderCommunicator
-    // is initialized and the service is not bound then bind it now.
+    cameraSliderCommunicator = new CameraSliderCommunicator(this, cameraSliderCommunicatorInterface);
+
+    // onResume is called every time the Activity is brought into view. If the
+    // CameraSliderCommunicator is initialized and the service is not bound then bind it now.
     if (cameraSliderCommunicator != null && !cameraSliderCommunicator.isServiceBound()) {
       cameraSliderCommunicator.bindService();
     }
   }
 
   @Override
-  protected void onResume() {
-    super.onResume();
-
-    cameraSliderCommunicator.onResume();
-  }
-
-  @Override
   protected void onPause() {
-    super.onPause();
-
-    cameraSliderCommunicator.onPause();
-  }
-
-  @Override
-  protected void onStop() {
-    super.onStop();
-
     // When the Activity is stopped (exits the view), unbind the service to prevent leaks. This would
     // leave the service running in standalone mode in the background but after unbinding we check
     // if there is an active task running (like timelapse or video). If not, terminate the service.
@@ -159,6 +141,8 @@ public class CameraSliderMainActivity extends AppCompatActivity
 
       cameraSliderCommunicator.unbindService();
     }
+
+    super.onPause();
   }
 
   @Override
@@ -239,6 +223,36 @@ public class CameraSliderMainActivity extends AppCompatActivity
     }
   }
 
+  private CameraSliderCommunicator.CameraSliderCommunicatorInterface cameraSliderCommunicatorInterface =
+      new CameraSliderCommunicator.CameraSliderCommunicatorInterface() {
+    @Override
+    public void onConnect() {
+      Toast.makeText(getApplicationContext(), "Connected", Toast.LENGTH_SHORT).show();
+      hideConnectionProgressDialog();
+
+      Fragment f = getSupportFragmentManager().findFragmentByTag(BluetoothDeviceSelectionFragment.class.getName());
+      if (f != null && f instanceof BluetoothDeviceSelectionFragment) {
+        BluetoothDeviceSelectionFragment bFragment = (BluetoothDeviceSelectionFragment) f;
+        bFragment.deviceConnected();
+      }
+    }
+
+    @Override
+    public void onDisconnect() {
+      Toast.makeText(getApplicationContext(), "Disconencted", Toast.LENGTH_SHORT).show();
+      hideConnectionProgressDialog();
+    }
+
+    @Override
+    public void onVerificationFail() {
+      Toast.makeText(getApplicationContext(), "Verification failed", Toast.LENGTH_SHORT).show();
+      hideConnectionProgressDialog();
+    }
+  };
+
+
+
+
   /**
    * Callback from BluetoothDeviceSelectionFragment to connect to a device.
    *
@@ -270,37 +284,9 @@ public class CameraSliderMainActivity extends AppCompatActivity
    */
   private void hideConnectionProgressDialog() {
     if (progressDialog != null) {
-      progressDialog.hide();
+      progressDialog.dismiss();
     }
   }
-
-  private CameraSliderCommunicator.CameraSliderCommunicatorInterface cameraSliderCommunicatorInterface =
-      new CameraSliderCommunicator.CameraSliderCommunicatorInterface() {
-    @Override
-    public void onConnect() {
-      Toast.makeText(getApplicationContext(), "Connected", Toast.LENGTH_SHORT).show();
-      hideConnectionProgressDialog();
-
-      Fragment f = getSupportFragmentManager().findFragmentByTag(BluetoothDeviceSelectionFragment.class.getName());
-      if (f != null && f instanceof BluetoothDeviceSelectionFragment) {
-        BluetoothDeviceSelectionFragment bFragment = (BluetoothDeviceSelectionFragment) f;
-        bFragment.deviceConnected();
-      }
-    }
-
-    @Override
-    public void onDisconnect() {
-      Toast.makeText(getApplicationContext(), "Disconencted", Toast.LENGTH_SHORT).show();
-      hideConnectionProgressDialog();
-    }
-
-    @Override
-    public void onVerificationFail() {
-      Toast.makeText(getApplicationContext(), "Verification failed", Toast.LENGTH_SHORT).show();
-      hideConnectionProgressDialog();
-    }
-  };
-
 
 
   /**********************************
@@ -320,5 +306,10 @@ public class CameraSliderMainActivity extends AppCompatActivity
   @Override
   public void resetHome() {
     Toast.makeText(getApplicationContext(), "reset home", Toast.LENGTH_SHORT).show();
+  }
+
+  @Override
+  public void moveManually(ManualModeFragment.ManualMoveInstructions instructions) {
+    cameraSliderCommunicator.moveManually(instructions);
   }
 }

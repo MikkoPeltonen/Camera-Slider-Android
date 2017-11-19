@@ -173,6 +173,13 @@ public class ConnectedThread extends Thread {
     message.write(payload, 0, payload.length);
     message.write(ConnectionConstants.FLAG_STOP);
 
+    StringBuilder str = new StringBuilder();
+    for (byte b : message.toByteArray()) {
+      str.append(String.format("%02X ", b));
+    }
+
+    Log.d(Constants.TAG, "sending message: " + str.toString());
+
     // Send the message
     write(message.toByteArray());
   }
