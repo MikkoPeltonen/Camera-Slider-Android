@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,8 +18,6 @@ import fi.peltoset.mikko.cameraslider.IncreaseDecreaseHandler;
 import fi.peltoset.mikko.cameraslider.IncreaseDecreaseHandlerStub;
 import fi.peltoset.mikko.cameraslider.R;
 import fi.peltoset.mikko.cameraslider.activities.CameraSliderMainActivity;
-import fi.peltoset.mikko.cameraslider.bluetooth.ConnectionConstants;
-import fi.peltoset.mikko.cameraslider.miscellaneous.Constants;
 import fi.peltoset.mikko.cameraslider.miscellaneous.KeyframePOJO;
 import fi.peltoset.mikko.cameraslider.miscellaneous.RotationDirection;
 
@@ -50,6 +47,8 @@ public class ManualModeFragment extends Fragment {
 
   private ManualModeListener listener;
   private CameraSliderMainActivity activity;
+
+  private ProgressDialog homingProgressDialog;
 
   public class ManualMoveInstructions {
     public RotationDirection slide = RotationDirection.STOP;
@@ -145,13 +144,12 @@ public class ManualModeFragment extends Fragment {
       currentPosition.setFocus(homePosition.getFocus());
       updateTextViews();
 
-      final ProgressDialog progressDialog = new ProgressDialog(getActivity(), R.style.AppCompatAlertDialogStyle);
-      progressDialog.setMessage("Moving to home position...");
-      progressDialog.show();
+      homingProgressDialog = new ProgressDialog(getActivity(), R.style.AppCompatAlertDialogStyle);
+      homingProgressDialog.setMessage("Moving to home position...");
+//      homingProgressDialog.setCancelable(false);
+      homingProgressDialog.show();
 
       listener.goHome();
-
-      new Handler().postDelayed(() -> progressDialog.cancel(), 3000);
     });
 
     // Set the current position as the home position
@@ -334,6 +332,11 @@ public class ManualModeFragment extends Fragment {
     } else {
       controlsOverlay.setVisibility(View.VISIBLE);
     }
+  }
+
+  public void onHomingDone() {
+    homingProgressDialog.setMessage("Homing done!");
+    new Handler().postDelayed(() -> homingProgressDialog.dismiss(), 1000);
   }
 
   private void updateTextViews() {

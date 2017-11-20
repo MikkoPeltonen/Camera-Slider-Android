@@ -20,19 +20,23 @@ import android.util.Log;
 import fi.peltoset.mikko.cameraslider.fragments.ManualModeFragment;
 import fi.peltoset.mikko.cameraslider.miscellaneous.Axis;
 import fi.peltoset.mikko.cameraslider.miscellaneous.Constants;
+import fi.peltoset.mikko.cameraslider.miscellaneous.Helpers;
 import fi.peltoset.mikko.cameraslider.miscellaneous.RotationDirection;
 
 public class CameraSliderCommunicator {
   private Activity context;
   private BluetoothService bluetoothService;
   private CameraSliderCommunicatorInterface listener;
+
   private boolean isConnected = false;
   private boolean isActionRunning = false;
+  private boolean isHoming = false;
 
   public interface CameraSliderCommunicatorInterface {
     void onConnect();
     void onDisconnect();
     void onVerificationFail();
+    void onHomingDone();
   }
 
   public CameraSliderCommunicator(Activity context, CameraSliderCommunicatorInterface listener) {
@@ -62,8 +66,6 @@ public class CameraSliderCommunicator {
   private class ServiceMessageHandler extends Handler {
     @Override
     public void handleMessage(Message msg) {
-      Bundle data = msg.getData();
-
       switch (msg.what) {
         case BluetoothService.MSG_CONNECTED:
           isConnected = true;
@@ -80,7 +82,7 @@ public class CameraSliderCommunicator {
           listener.onVerificationFail();
           break;
         case BluetoothService.MSG_MESSAGE:
-          Log.d(Constants.TAG, "comm: " + data.getByteArray(BluetoothService.MSG_MESSAGE_DATA_MESSAGE).toString());
+          processMessage(msg.getData().getByteArray(BluetoothService.MSG_MESSAGE_DATA_MESSAGE));
           break;
         default:
           super.handleMessage(msg);
@@ -145,6 +147,22 @@ public class CameraSliderCommunicator {
     if (bluetoothService != null) {
       context.unbindService(serviceConnection);
       bluetoothService = null;
+    }
+  }
+
+  /**
+   * Handle incoming messages from BluetoothService (Camera Slider).
+   *
+   * @param message Bundled message
+   */
+  private void processMessage(byte[] message) {
+    byte command = message[1];
+
+    switch (command) {
+      case ConnectionConstants.HOMING_DONE:
+        isHoming = false;
+        listener.onHomingDone();
+        break;
     }
   }
 
@@ -243,6 +261,7 @@ public class CameraSliderCommunicator {
    */
   public void goHome() {
     bluetoothService.sendCommand(ConnectionConstants.GO_HOME, new byte[]{});
+    isHoming = true;
   }
 
   /**

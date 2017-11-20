@@ -18,9 +18,7 @@ import fi.peltoset.mikko.cameraslider.miscellaneous.Constants;
 
 public class BluetoothService extends Service {
   private ConnectedThread connectedThread;
-  private boolean isDeviceConnected = false;
   private Messenger listener;
-
 
   public static final int MSG_CONNECTED = 1;
   public static final int MSG_DISCONNECTED = 2;
@@ -69,7 +67,6 @@ public class BluetoothService extends Service {
     public void onConnectionFail() {
       // Opening the socket failed.
       sendMessage(MSG_DISCONNECTED, null);
-      Log.d(Constants.TAG, "couldn't connect to a device");
     }
   };
 
@@ -77,20 +74,17 @@ public class BluetoothService extends Service {
   private ConnectedThread.ConnectedThreadListener connectedThreadListener = new ConnectedThread.ConnectedThreadListener() {
     @Override
     public void onConnect() {
-      isDeviceConnected = true;
       sendMessage(MSG_CONNECTED, null);
     }
 
     @Override
     public void onDisconnect() {
       // The Bluetooth connection was closed.
-      isDeviceConnected = false;
       sendMessage(MSG_DISCONNECTED, null);
     }
 
     @Override
     public void onVerificationFail() {
-      isDeviceConnected = false;
       sendMessage(MSG_VERIFICATION_FAIL, null);
     }
 

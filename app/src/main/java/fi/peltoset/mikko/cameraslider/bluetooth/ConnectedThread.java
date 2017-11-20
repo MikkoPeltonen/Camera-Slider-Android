@@ -10,6 +10,7 @@ import java.io.OutputStream;
 import java.util.Arrays;
 
 import fi.peltoset.mikko.cameraslider.miscellaneous.Constants;
+import fi.peltoset.mikko.cameraslider.miscellaneous.Helpers;
 
 public class ConnectedThread extends Thread {
   private BluetoothSocket socket;
@@ -69,8 +70,10 @@ public class ConnectedThread extends Thread {
         // if the first byte of the buffer is FLAG_START.
         if (inByte == ConnectionConstants.FLAG_STOP) {
           if (message[0] != ConnectionConstants.FLAG_START) {
-            return;
+            continue;
           }
+
+          buffer.reset();
 
           StringBuilder str = new StringBuilder();
           for (byte b : message) {
@@ -148,7 +151,7 @@ public class ConnectedThread extends Thread {
    * @return
    */
   private boolean verifyDevice(byte[] message) {
-    return Arrays.equals(getPayload(message), ConnectionConstants.HANDSHAKE_GREETING.getBytes());
+    return Arrays.equals(Helpers.getPayload(message), ConnectionConstants.HANDSHAKE_GREETING.getBytes());
   }
 
   /**
@@ -182,15 +185,5 @@ public class ConnectedThread extends Thread {
 
     // Send the message
     write(message.toByteArray());
-  }
-
-  /**
-   * Strip start, command and stop bytes from the message.
-   *
-   * @param message Raw message
-   * @return Payload
-   */
-  public byte[] getPayload(byte[] message) {
-    return Arrays.copyOfRange(message, 2, message.length - 1);
   }
 }

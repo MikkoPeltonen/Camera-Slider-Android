@@ -225,6 +225,14 @@ public class CameraSliderMainActivity extends AppCompatActivity
       Toast.makeText(getApplicationContext(), "Verification failed", Toast.LENGTH_SHORT).show();
       hideConnectionProgressDialog();
     }
+
+    @Override
+    public void onHomingDone() {
+      ManualModeFragment fragment = (ManualModeFragment) fragmentManager.findFragmentByTag(ManualModeFragment.class.getName());
+      if (fragment != null) {
+        fragment.onHomingDone();
+      }
+    }
   };
 
   /**

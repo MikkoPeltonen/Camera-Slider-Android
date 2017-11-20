@@ -6,6 +6,7 @@ public class ConnectionConstants {
     public static byte SEND_VERIFICATION = 11;
     public static byte MOVE_MOTORS = 32;
     public static byte GO_HOME = 31;
+    public static final byte HOMING_DONE = 22;
     public static byte SET_HOME = 30;
     public static byte SEND_HANDSHAKE_GREETING = 10;
     public static String HANDSHAKE_GREETING = "r6lrj37e2nkaavgz";
