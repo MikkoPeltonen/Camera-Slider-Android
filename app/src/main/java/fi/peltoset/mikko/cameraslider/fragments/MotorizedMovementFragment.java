@@ -1,12 +1,14 @@
 package fi.peltoset.mikko.cameraslider.fragments;
 
 
-import android.content.DialogInterface;
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -22,6 +24,7 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
+import fi.peltoset.mikko.cameraslider.activities.RecordingRunningActivity;
 import fi.peltoset.mikko.cameraslider.dialogs.FPSPickerDialog;
 import fi.peltoset.mikko.cameraslider.KeyframeAdapter;
 import fi.peltoset.mikko.cameraslider.miscellaneous.KeyframePOJO;
@@ -29,7 +32,6 @@ import fi.peltoset.mikko.cameraslider.R;
 import fi.peltoset.mikko.cameraslider.RecyclerItemClickListener;
 import fi.peltoset.mikko.cameraslider.dialogs.ValuePickerDialog;
 import fi.peltoset.mikko.cameraslider.activities.KeyframeEditActivity;
-import fi.peltoset.mikko.cameraslider.activities.RecordingRunningActivity;
 import fi.peltoset.mikko.cameraslider.interfaces.RecyclerViewFpsIntervalListener;
 import fi.peltoset.mikko.cameraslider.interfaces.ValuePickerDialogInterface;
 
@@ -62,6 +64,10 @@ public class MotorizedMovementFragment extends Fragment implements ValuePickerDi
   private RecyclerView.LayoutManager keyframeLayoutManager;
   private RecyclerViewFpsIntervalListener adapterListener;
 
+  MotorizedMovementFragmentListener listener;
+
+  private ProgressDialog sendDataProgressDialog;
+
   private enum Mode {
     TIMELAPSE, VIDEO
   }
@@ -70,6 +76,10 @@ public class MotorizedMovementFragment extends Fragment implements ValuePickerDi
 
   // All keyframes in the motion
   private ArrayList<KeyframePOJO> keyframes = new ArrayList<>();
+
+  public interface MotorizedMovementFragmentListener {
+    void sendDataToCameraSlider(byte[] settings, ArrayList<KeyframePOJO> keyframes);
+  }
 
   public MotorizedMovementFragment() {}
 
@@ -94,6 +104,18 @@ public class MotorizedMovementFragment extends Fragment implements ValuePickerDi
   }
 
   @Override
+  public void onAttach(Context context) {
+    super.onAttach(context);
+
+    // Verify that the Activity implements the MotorizedMovementFragmentListener interface
+    if (context instanceof MotorizedMovementFragmentListener) {
+      listener = (MotorizedMovementFragmentListener) context;
+    } else {
+      throw new RuntimeException(context.toString() + " must implement MotorizedMovementFragmentListener");
+    }
+  }
+
+  @Override
   public View onCreateView(LayoutInflater inflater, ViewGroup container,
                            Bundle savedInstanceState) {
 
@@ -113,81 +135,49 @@ public class MotorizedMovementFragment extends Fragment implements ValuePickerDi
     totalWaitTime = (TextView) view.findViewById(R.id.totalRunningTime);
 
     // Handle start button click
-    startMovement.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setTitle("Choose action");
-        builder.setMessage("Do you wish to move through the sequence first to quickly preview the timelapse?");
+    startMovement.setOnClickListener(v -> {
+      sendDataProgressDialog = new ProgressDialog(getActivity(), R.style.AppCompatAlertDialogStyle);
+      sendDataProgressDialog.setMessage("Sending data...");
+      sendDataProgressDialog.setCancelable(false);
+      sendDataProgressDialog.show();
 
-        builder.setPositiveButton("Run", new DialogInterface.OnClickListener() {
-          @Override
-          public void onClick(DialogInterface dialog, int which) {
-            Intent recordingRunningActivity = new Intent(getActivity(), RecordingRunningActivity.class);
-            startActivity(recordingRunningActivity);
-          }
-        });
-
-        builder.setNeutralButton("Cancel", new DialogInterface.OnClickListener() {
-          @Override
-          public void onClick(DialogInterface dialog, int which) {
-
-          }
-        });
-
-        builder.setNegativeButton("Preview", new DialogInterface.OnClickListener() {
-          @Override
-          public void onClick(DialogInterface dialog, int which) {
-
-          }
-        });
-
-        builder.create().show();
-      }
+      // Tell the parent Activity to send the data to the Camera Slider
+      listener.sendDataToCameraSlider(new byte[]{}, keyframes);
     });
 
     // Start a new Activity for adding a new keyframe
-    addKeyframe.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        Intent intent = new Intent(getActivity(), KeyframeEditActivity.class);
-        intent.putExtra("FPS", fps);
-        intent.putExtra("INTERVAL", interval);
-        startActivityForResult(intent, CREATE_NEW_KEYFRAME);
-      }
+    addKeyframe.setOnClickListener(v -> {
+      Intent intent = new Intent(getActivity(), KeyframeEditActivity.class);
+      intent.putExtra("FPS", fps);
+      intent.putExtra("INTERVAL", interval);
+      startActivityForResult(intent, CREATE_NEW_KEYFRAME);
     });
 
     // Open a dialog for choosing the video FPS
-    videoFPSContainer.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        FPSPickerDialog fpsPicker = FPSPickerDialog.newInstance();
-        fpsPicker.setFPS(fps);
-        fpsPicker.show(getFragmentManager(), "fps_picker_dialog");
-        fpsPicker.setTargetFragment(MotorizedMovementFragment.this, FPS_PICKER);
-      }
+    videoFPSContainer.setOnClickListener(v -> {
+      FPSPickerDialog fpsPicker = FPSPickerDialog.newInstance();
+      fpsPicker.setFPS(fps);
+      fpsPicker.show(getFragmentManager(), "fps_picker_dialog");
+      fpsPicker.setTargetFragment(MotorizedMovementFragment.this, FPS_PICKER);
     });
 
     // Open a dialog for choosing the interval photos are taken
-    photoIntervalContainer.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        ValuePickerDialog intervalPicker = ValuePickerDialog.newInstance(INTERVAL_PICKER);
-        intervalPicker
-            .setValue(interval)
-            .setStepSize(100)
-            .setTitle("Interval")
-            .setMessage("Select how often the camera should take a picture.")
-            .setIcon(R.drawable.ic_av_timer_white_36dp)
-            .setDivider(1000)
-            .setUnit("s")
-            .setMinimumValue(100);
+    photoIntervalContainer.setOnClickListener(v -> {
+      ValuePickerDialog intervalPicker = ValuePickerDialog.newInstance(INTERVAL_PICKER);
+      intervalPicker
+          .setValue(interval)
+          .setStepSize(100)
+          .setTitle("Interval")
+          .setMessage("Select how often the camera should take a picture.")
+          .setIcon(R.drawable.ic_av_timer_white_36dp)
+          .setDivider(1000)
+          .setUnit("s")
+          .setMinimumValue(100);
 
-        intervalPicker.setListener(MotorizedMovementFragment.this);
+      intervalPicker.setListener(MotorizedMovementFragment.this);
 
-        intervalPicker.show(getFragmentManager(), "interval_picker_fragment");
-        intervalPicker.setTargetFragment(MotorizedMovementFragment.this, INTERVAL_PICKER);
-      }
+      intervalPicker.show(getFragmentManager(), "interval_picker_fragment");
+      intervalPicker.setTargetFragment(MotorizedMovementFragment.this, INTERVAL_PICKER);
     });
 
     // Set up RecyclerView with data
@@ -247,6 +237,38 @@ public class MotorizedMovementFragment extends Fragment implements ValuePickerDi
     }
 
     return view;
+  }
+
+  /**
+   * Called when all settings and instructions have been sent to the Camera Slider. Dismiss the
+   * progress dialog and continue to the next steps of actually starting the action.
+   */
+  public void onDataSent() {
+    sendDataProgressDialog.setMessage("Data sent!");
+    new Handler().postDelayed(() -> {
+      sendDataProgressDialog.dismiss();
+      promptToStartOrPreviewAction();
+    }, 1000);
+  }
+
+  /**
+   * Prompt the user to start the action or to preview it.
+   */
+  private void promptToStartOrPreviewAction() {
+    AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+      builder.setTitle("Choose action");
+      builder.setMessage("Do you wish to move through the sequence first to quickly preview the timelapse?");
+
+      builder.setPositiveButton("Run", (dialog, which) -> {
+        Intent recordingRunningActivity = new Intent(getActivity(), RecordingRunningActivity.class);
+        startActivity(recordingRunningActivity);
+      });
+
+      builder.setNeutralButton("Cancel", (dialog, which) -> {});
+
+      builder.setNegativeButton("Preview", (dialog, which) -> {});
+
+      builder.create().show();
   }
 
   /**

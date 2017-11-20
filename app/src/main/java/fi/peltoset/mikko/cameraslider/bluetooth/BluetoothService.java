@@ -12,9 +12,6 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.support.annotation.Nullable;
-import android.util.Log;
-
-import fi.peltoset.mikko.cameraslider.miscellaneous.Constants;
 
 public class BluetoothService extends Service {
   private ConnectedThread connectedThread;

@@ -1,10 +1,14 @@
 package fi.peltoset.mikko.cameraslider.miscellaneous;
 
+import android.animation.Keyframe;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.io.ByteArrayOutputStream;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
+
+import fi.peltoset.mikko.cameraslider.bluetooth.ConnectionConstants;
 
 /**
  *
@@ -160,5 +164,34 @@ public class KeyframePOJO implements Parcelable {
     tiltAngle = in.readInt();
     zoom = in.readInt();
     focus = in.readInt();
+  }
+
+  /**
+   * Create a KeyframePOJO from raw bytes. This is used when connecting to a Camera Slider that is
+   * running an action and sends its data back to the client.
+   *
+   * @param bytes
+   */
+  public KeyframePOJO(byte[] bytes) {
+    // TODO
+  }
+
+
+  /**
+   * Convert KeyframePOJO to a byte array that can be send to the Camera Slider.
+   *
+   * @return Byte array representation of the Keyframe
+   */
+  public byte[] toByteArray() {
+    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+
+    buffer.write(Helpers.intToByteArray(duration), 0, 4);
+    buffer.write(Helpers.intToByteArray(slideLength), 0, 4);
+    buffer.write(Helpers.intToByteArray(panAngle), 0, 4);
+    buffer.write(Helpers.intToByteArray(tiltAngle), 0, 4);
+    buffer.write(Helpers.intToByteArray(focus), 0, 4);
+    buffer.write(Helpers.intToByteArray(zoom), 0, 4);
+
+    return buffer.toByteArray();
   }
 }

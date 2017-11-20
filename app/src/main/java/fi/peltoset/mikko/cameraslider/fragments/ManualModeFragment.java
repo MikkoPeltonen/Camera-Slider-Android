@@ -146,7 +146,7 @@ public class ManualModeFragment extends Fragment {
 
       homingProgressDialog = new ProgressDialog(getActivity(), R.style.AppCompatAlertDialogStyle);
       homingProgressDialog.setMessage("Moving to home position...");
-//      homingProgressDialog.setCancelable(false);
+      homingProgressDialog.setCancelable(false);
       homingProgressDialog.show();
 
       listener.goHome();

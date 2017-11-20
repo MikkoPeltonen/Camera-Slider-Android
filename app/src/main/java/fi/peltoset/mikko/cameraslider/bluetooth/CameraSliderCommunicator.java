@@ -17,10 +17,14 @@ import android.os.Messenger;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
+
 import fi.peltoset.mikko.cameraslider.fragments.ManualModeFragment;
 import fi.peltoset.mikko.cameraslider.miscellaneous.Axis;
 import fi.peltoset.mikko.cameraslider.miscellaneous.Constants;
 import fi.peltoset.mikko.cameraslider.miscellaneous.Helpers;
+import fi.peltoset.mikko.cameraslider.miscellaneous.KeyframePOJO;
 import fi.peltoset.mikko.cameraslider.miscellaneous.RotationDirection;
 
 public class CameraSliderCommunicator {
@@ -37,6 +41,7 @@ public class CameraSliderCommunicator {
     void onDisconnect();
     void onVerificationFail();
     void onHomingDone();
+    void onDataSent();
   }
 
   public CameraSliderCommunicator(Activity context, CameraSliderCommunicatorInterface listener) {
@@ -163,6 +168,9 @@ public class CameraSliderCommunicator {
         isHoming = false;
         listener.onHomingDone();
         break;
+      case ConnectionConstants.DATA_RECEIVED:
+        listener.onDataSent();
+        break;
     }
   }
 
@@ -285,10 +293,35 @@ public class CameraSliderCommunicator {
     payload[1] = setAxisInstructions(payload[1], Axis.FOCUS, instructions.focus);
     payload[1] = setAxisInstructions(payload[1], Axis.ZOOM, instructions.zoom);
 
-    Log.d(Constants.TAG, "bits: " + String.format("%8s", Integer.toBinaryString(0xff & payload[0])).replace(" ", "0"));
-    Log.d(Constants.TAG, "bits: " + String.format("%8s", Integer.toBinaryString(0xff & payload[1])).replace(" ", "0"));
-
-
     bluetoothService.sendCommand(ConnectionConstants.MOVE_MOTORS, payload);
+  }
+
+  /**
+   * Send scene settings and keyframes to the Camera Slider.
+   *
+   * @param settings
+   * @param keyframes
+   */
+  public void saveInstructions(byte[] settings, ArrayList<KeyframePOJO> keyframes) {
+    // Create the first command to tell the Camera Slider what to expect.
+    ByteArrayOutputStream beginPayloadBuffer = new ByteArrayOutputStream();
+
+    beginPayloadBuffer.write(Helpers.intToByteArray(settings.length), 0, 4);
+    beginPayloadBuffer.write(Helpers.intToByteArray(keyframes.size()), 0, 4);
+
+    bluetoothService.sendCommand(ConnectionConstants.BEGIN_DATA_DOWNLOAD, beginPayloadBuffer.toByteArray());
+
+    // Send the settings
+    ByteArrayOutputStream settingsBuffer = new ByteArrayOutputStream();
+    bluetoothService.sendCommand(ConnectionConstants.SAVE_SETTINGS, settingsBuffer.toByteArray());
+
+    // Send all the keyframe instructions one by one.
+    for (KeyframePOJO keyframe : keyframes) {
+      bluetoothService.sendCommand(ConnectionConstants.SAVE_INSTRUCTIONS, keyframe.toByteArray());
+    }
+
+    // Send a checksum of the data to verify it.
+    ByteArrayOutputStream checksumBuffer = new ByteArrayOutputStream();
+    bluetoothService.sendCommand(ConnectionConstants.SEND_DATA_CHECKSUM, checksumBuffer.toByteArray());
   }
 }

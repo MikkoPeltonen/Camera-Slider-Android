@@ -15,6 +15,8 @@ import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+
 import fi.peltoset.mikko.cameraslider.CameraSliderApplication;
 import fi.peltoset.mikko.cameraslider.R;
 import fi.peltoset.mikko.cameraslider.bluetooth.CameraSliderCommunicator;
@@ -24,10 +26,13 @@ import fi.peltoset.mikko.cameraslider.fragments.MotorizedMovementFragment;
 import fi.peltoset.mikko.cameraslider.fragments.PanoramaFragment;
 import fi.peltoset.mikko.cameraslider.fragments.SettingsFragment;
 import fi.peltoset.mikko.cameraslider.interfaces.BluetoothDeviceSelectionListener;
+import fi.peltoset.mikko.cameraslider.miscellaneous.KeyframePOJO;
 
 public class CameraSliderMainActivity extends AppCompatActivity
-    implements NavigationView.OnNavigationItemSelectedListener, BluetoothDeviceSelectionListener,
-    ManualModeFragment.ManualModeListener {
+    implements NavigationView.OnNavigationItemSelectedListener,
+               BluetoothDeviceSelectionListener,
+               ManualModeFragment.ManualModeListener,
+               MotorizedMovementFragment.MotorizedMovementFragmentListener {
 
   private CameraSliderApplication app;
   private CameraSliderCommunicator cameraSliderCommunicator = null;
@@ -228,9 +233,20 @@ public class CameraSliderMainActivity extends AppCompatActivity
 
     @Override
     public void onHomingDone() {
+      // Notify the ManualModeFragment about successful homing.
       ManualModeFragment fragment = (ManualModeFragment) fragmentManager.findFragmentByTag(ManualModeFragment.class.getName());
       if (fragment != null) {
         fragment.onHomingDone();
+      }
+    }
+
+    @Override
+    public void onDataSent() {
+      // Notify MotorizedMovementFragment about the Camera Slider having successfully received
+      // settings and move instructions.
+      MotorizedMovementFragment fragment = (MotorizedMovementFragment) fragmentManager.findFragmentByTag(MotorizedMovementFragment.class.getName()) ;
+      if (fragment != null) {
+        fragment.onDataSent();
       }
     }
   };
@@ -243,7 +259,6 @@ public class CameraSliderMainActivity extends AppCompatActivity
   public boolean isCameraSliderConnected() {
     return cameraSliderCommunicator.isConnected();
   }
-
 
 
 
@@ -311,5 +326,14 @@ public class CameraSliderMainActivity extends AppCompatActivity
   public void openDevicesTab() {
     navigationView.setCheckedItem(R.id.nav_devices);
     changeFragment(BluetoothDeviceSelectionFragment.class);
+  }
+
+  /*****************************************
+   * Motorized Movement Fragment interface *
+   *****************************************/
+
+  @Override
+  public void sendDataToCameraSlider(byte[] settings, ArrayList<KeyframePOJO> keyframes) {
+    cameraSliderCommunicator.saveInstructions(settings, keyframes);
   }
 }
