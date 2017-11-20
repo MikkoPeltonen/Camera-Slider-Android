@@ -362,8 +362,7 @@
             android:background="#e6ffffff"
             android:clickable="true"
             android:gravity="center_vertical|center_horizontal"
-            android:orientation="vertical"
-            android:visibility="gone">
+            android:orientation="vertical">
 
             <TextView
                 android:id="@+id/textView24"

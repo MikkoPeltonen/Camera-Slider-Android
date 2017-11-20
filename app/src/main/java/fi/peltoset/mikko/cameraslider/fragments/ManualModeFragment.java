@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,11 +15,12 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import org.greenrobot.eventbus.EventBus;
-
 import fi.peltoset.mikko.cameraslider.IncreaseDecreaseHandler;
 import fi.peltoset.mikko.cameraslider.IncreaseDecreaseHandlerStub;
 import fi.peltoset.mikko.cameraslider.R;
+import fi.peltoset.mikko.cameraslider.activities.CameraSliderMainActivity;
+import fi.peltoset.mikko.cameraslider.bluetooth.ConnectionConstants;
+import fi.peltoset.mikko.cameraslider.miscellaneous.Constants;
 import fi.peltoset.mikko.cameraslider.miscellaneous.KeyframePOJO;
 import fi.peltoset.mikko.cameraslider.miscellaneous.RotationDirection;
 
@@ -47,7 +49,7 @@ public class ManualModeFragment extends Fragment {
   private LinearLayout controlsOverlay;
 
   private ManualModeListener listener;
-  private EventBus eventBus;
+  private CameraSliderMainActivity activity;
 
   public class ManualMoveInstructions {
     public RotationDirection slide = RotationDirection.STOP;
@@ -60,10 +62,11 @@ public class ManualModeFragment extends Fragment {
   ManualMoveInstructions manualMoveInstructions = new ManualMoveInstructions();
 
   public interface ManualModeListener {
-      void setHome();
+    void setHome();
     void goHome();
     void resetHome();
     void moveManually(ManualMoveInstructions instructions);
+    void openDevicesTab();
   }
 
   public ManualModeFragment() {}
@@ -83,6 +86,8 @@ public class ManualModeFragment extends Fragment {
     } else {
       throw new RuntimeException(context.toString() + " must implement ManualModeListener");
     }
+
+    activity = (CameraSliderMainActivity) getActivity();
   }
 
   @Override
@@ -94,8 +99,6 @@ public class ManualModeFragment extends Fragment {
     if (savedInstanceState != null) {
       currentPosition = savedInstanceState.getParcelable("currentPosition");
     }
-
-    eventBus = EventBus.getDefault();
   }
 
   @Override
@@ -190,6 +193,10 @@ public class ManualModeFragment extends Fragment {
 
       alertDialogBuilder.create().show();
     });
+
+    // If the controls overlay is visible (Camera Slider is not connected), clicking on it should
+    // open the device selection fragment.
+    controlsOverlay.setOnClickListener(v -> listener.openDevicesTab());
 
     new IncreaseDecreaseHandler(slideRight, slideLeft, new IncreaseDecreaseHandlerStub() {
       @Override
@@ -314,6 +321,19 @@ public class ManualModeFragment extends Fragment {
     updateTextViews();
 
     return view;
+  }
+
+  @Override
+  public void onResume() {
+    super.onResume();
+
+    // Query the parent activity for Camera Slider connection status. If connected, hide the
+    // controls overlay that prevents accessing the control buttons.
+    if (activity.isCameraSliderConnected()) {
+      controlsOverlay.setVisibility(View.GONE);
+    } else {
+      controlsOverlay.setVisibility(View.VISIBLE);
+    }
   }
 
   private void updateTextViews() {

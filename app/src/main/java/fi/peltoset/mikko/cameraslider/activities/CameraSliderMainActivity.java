@@ -24,7 +24,6 @@ import fi.peltoset.mikko.cameraslider.fragments.MotorizedMovementFragment;
 import fi.peltoset.mikko.cameraslider.fragments.PanoramaFragment;
 import fi.peltoset.mikko.cameraslider.fragments.SettingsFragment;
 import fi.peltoset.mikko.cameraslider.interfaces.BluetoothDeviceSelectionListener;
-import fi.peltoset.mikko.cameraslider.miscellaneous.KeyframePOJO;
 
 public class CameraSliderMainActivity extends AppCompatActivity
     implements NavigationView.OnNavigationItemSelectedListener, BluetoothDeviceSelectionListener,
@@ -36,14 +35,7 @@ public class CameraSliderMainActivity extends AppCompatActivity
   private ProgressDialog progressDialog;
   private String activeFragmentTag = null;
   private FragmentManager fragmentManager = getSupportFragmentManager();
-
-  private Class<?>[] fragmentClasses = {
-      ManualModeFragment.class,
-      MotorizedMovementFragment.class,
-      PanoramaFragment.class,
-      BluetoothDeviceSelectionFragment.class,
-      SettingsFragment.class
-  };
+  private NavigationView navigationView;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -73,7 +65,7 @@ public class CameraSliderMainActivity extends AppCompatActivity
     drawer.addDrawerListener(toggle);
     toggle.syncState();
 
-    NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+    navigationView = (NavigationView) findViewById(R.id.nav_view);
     navigationView.setNavigationItemSelectedListener(this);
 
     if (savedInstanceState == null) {
@@ -194,32 +186,17 @@ public class CameraSliderMainActivity extends AppCompatActivity
   }
 
   private void changeFragment(Class<?> selectedFragmentClass) {
-    // Go through all fragments and hide all others except the selected one. It shouldn't be visible
-    // but test anyways for safety.
-    for (Class<?> fragmentClass : fragmentClasses) {
-      String fragmentClassName = fragmentClass.getName();
-
-      if (fragmentClassName.equals(selectedFragmentClass.getName())) {
-        continue;
+    try {
+      Fragment newFragment = fragmentManager.findFragmentByTag(selectedFragmentClass.getName());
+      if (newFragment == null) {
+        newFragment = (Fragment) selectedFragmentClass.newInstance();
       }
 
-      Fragment testedFragment = fragmentManager.findFragmentByTag(fragmentClassName);
-      if (testedFragment != null) {
-        fragmentManager.beginTransaction().hide(testedFragment).commit();
-      }
-    }
-
-    // If a fragment is not found with the selected fragments class (tag), then instantiate a new
-    // fragment with the name and add it to the fragment manager. Otherwise show the fragment.
-    Fragment newFragment = fragmentManager.findFragmentByTag(selectedFragmentClass.getName());
-    if (newFragment == null) {
-      try {
-        fragmentManager.beginTransaction().add(R.id.content_frame, (Fragment) Class.forName(selectedFragmentClass.getName()).newInstance(), selectedFragmentClass.getName()).commit();
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
-    } else {
-      fragmentManager.beginTransaction().show(newFragment).commit();
+      fragmentManager.beginTransaction().replace(
+          R.id.content_frame, newFragment, selectedFragmentClass.getName()
+      ).commit();
+    } catch (Exception e) {
+      Toast.makeText(this, "Weird, it failed?", Toast.LENGTH_SHORT).show();
     }
   }
 
@@ -239,7 +216,7 @@ public class CameraSliderMainActivity extends AppCompatActivity
 
     @Override
     public void onDisconnect() {
-      Toast.makeText(getApplicationContext(), "Disconencted", Toast.LENGTH_SHORT).show();
+      Toast.makeText(getApplicationContext(), "Disconnected", Toast.LENGTH_SHORT).show();
       hideConnectionProgressDialog();
     }
 
@@ -249,6 +226,15 @@ public class CameraSliderMainActivity extends AppCompatActivity
       hideConnectionProgressDialog();
     }
   };
+
+  /**
+   * Check if the device is connected to a Camera Slider.
+   *
+   * @return true if connected, false otherwise
+   */
+  public boolean isCameraSliderConnected() {
+    return cameraSliderCommunicator.isConnected();
+  }
 
 
 
@@ -311,5 +297,11 @@ public class CameraSliderMainActivity extends AppCompatActivity
   @Override
   public void moveManually(ManualModeFragment.ManualMoveInstructions instructions) {
     cameraSliderCommunicator.moveManually(instructions);
+  }
+
+  @Override
+  public void openDevicesTab() {
+    navigationView.setCheckedItem(R.id.nav_devices);
+    changeFragment(BluetoothDeviceSelectionFragment.class);
   }
 }
