@@ -238,6 +238,25 @@ public class CameraSliderCommunicator {
    *                    *
    **********************/
 
+  /**
+   * Move the Camera Slider to the set home position.
+   */
+  public void goHome() {
+    bluetoothService.sendCommand(ConnectionConstants.GO_HOME, new byte[]{});
+  }
+
+  /**
+   * Set the current position as the home position.
+   */
+  public void setHome() {
+    bluetoothService.sendCommand(ConnectionConstants.SET_HOME, new byte[]{});
+  }
+
+  /**
+   * Send command to move the motors manually
+   *
+   * @param instructions
+   */
   public void moveManually(ManualModeFragment.ManualMoveInstructions instructions) {
     byte[] payload = { 0, 0 };
 

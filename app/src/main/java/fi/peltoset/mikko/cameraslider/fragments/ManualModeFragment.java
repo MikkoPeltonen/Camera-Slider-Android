@@ -60,7 +60,7 @@ public class ManualModeFragment extends Fragment {
   ManualMoveInstructions manualMoveInstructions = new ManualMoveInstructions();
 
   public interface ManualModeListener {
-    void setHome(KeyframePOJO home);
+      void setHome();
     void goHome();
     void resetHome();
     void moveManually(ManualMoveInstructions instructions);
@@ -161,6 +161,8 @@ public class ManualModeFragment extends Fragment {
       homePosition.setFocus(currentPosition.getFocus());
 
       currentPosition = new KeyframePOJO();
+
+      listener.setHome();
 
       updateTextViews();
     });

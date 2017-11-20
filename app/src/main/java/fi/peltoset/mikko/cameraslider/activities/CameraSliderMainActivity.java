@@ -294,13 +294,13 @@ public class CameraSliderMainActivity extends AppCompatActivity
    **********************************/
 
   @Override
-  public void setHome(KeyframePOJO home) {
-    Toast.makeText(getApplicationContext(), "set home", Toast.LENGTH_SHORT).show();
+  public void setHome() {
+    cameraSliderCommunicator.setHome();
   }
 
   @Override
   public void goHome() {
-    Toast.makeText(getApplicationContext(), "go home", Toast.LENGTH_SHORT).show();
+    cameraSliderCommunicator.goHome();
   }
 
   @Override
